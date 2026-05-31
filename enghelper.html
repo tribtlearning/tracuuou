@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trợ lý học tiếng Anh</title>
+    <!-- Tải Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tải Tesseract.js (OCR) -->
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+    
+    <style>
+        /* Progress bar cho model */
+        progress {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            border: none;
+        }
+        progress::-webkit-progress-bar {
+            background-color: theme('colors.gray.200');
+        }
+        progress::-webkit-progress-value {
+            background-color: theme('colors.green.500');
+            transition: width 0.3s ease;
+        }
+        progress::-moz-progress-bar {
+            background-color: theme('colors.green.500');
+        }
+        /* Kiểu cho từ được tô sáng */
+        .highlight-question {
+            background-color: theme('colors.yellow.200');
+            font-weight: bold;
+        }
+        .highlight-answer {
+            background-color: theme('colors.green.200');
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <!-- Header -->
+        <header class="mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 text-center">Trợ lý học tiếng Anh</h1>
+            <p class="text-center text-gray-600 mt-2">Tạo Transcript từ MP3 và So sánh Câu hỏi & Đáp án.</p>
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Cột 1: Tải file & Tạo Transcript (Client-side) -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Tải lên tệp âm thanh -->
+                <div class="rounded-lg border border-gray-200 p-4 bg-white shadow-sm">
+                    <label for="audio-upload" class="block text-sm font-medium text-gray-700 mb-2">
+                        1. Tải lên tệp âm thanh (MP3)
+                    </label>
+                    <input type="file" id="audio-upload" accept="audio/mp3, audio/mpeg" class="w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-lg file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-50 file:text-blue-700
+                        hover:file:bg-blue-100 cursor-pointer">
+                    <audio id="audio-player" controls class="w-full mt-4 rounded-lg" style="display: none;"></audio>
+                </div>
+
+                <!-- Nút Tạo Transcript (Client-side) -->
+                <div class="rounded-lg border border-gray-200 p-4 bg-white shadow-sm">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        2. Tạo Transcript (Trên Trình duyệt)
+                    </label>
+                    <button id="generate-transcript-btn" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition duration-150">
+                        Tạo Transcript từ MP3
+                    </button>
+                    <p class="text-xs text-gray-500 mt-2 italic">Dùng AI (Whisper) chạy ngay trên trình duyệt. Lần đầu sẽ mất thời gian tải mô hình.</p>
+                </div>
+
+                <!-- Hiển thị nội dung Transcript -->
+                <div class="rounded-lg border border-gray-200 p-4 bg-white shadow-sm">
+                     <h3 class="text-lg font-semibold text-gray-800 mb-2">Nội dung Transcript (Từ MP3)</h3>
+                     <div id="transcript-status" class="text-sm text-gray-500 mb-2"></div>
+                     <progress id="transcript-progress" class="hidden" max="100" value="0"></progress>
+                     <div id="transcript-display" class="w-full h-96 bg-gray-50 rounded-lg p-3 overflow-y-auto text-gray-600 text-sm border border-gray-200">
+                        Vui lòng nhấn nút "Tạo Transcript từ MP3" sau khi tải file...
+                     </div>
+                </div>
+            </div>
+
+            <!-- Cột 2: Nhập câu hỏi (Hỏi-đáp) -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="rounded-lg border border-gray-200 p-4 bg-white shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">3. Nhập câu hỏi</h3>
+                    
+                    <!-- Tabs -->
+                    <div class="border-b border-gray-200 mb-4">
+                        <nav class="flex space-x-4" aria-label="Tabs">
+                            <button id="tab-q-text" class="tab-btn-q px-3 py-2 font-medium text-sm rounded-t-lg border-b-2 border-blue-600 text-blue-600">Gõ tay</button>
+                            <button id="tab-q-image" class="tab-btn-q px-3 py-2 font-medium text-sm rounded-t-lg border-b-2 border-transparent text-gray-500 hover:text-gray-700">Tải ảnh (OCR)</button>
+                            <button id="tab-q-voice" class="tab-btn-q px-3 py-2 font-medium text-sm rounded-t-lg border-b-2 border-transparent text-gray-500 hover:text-gray-700">Giọng nói</button>
+                        </nav>
+                    </div>
+
+                    <!-- Tab Panels -->
+                    <div id="panel-q-text" class="tab-panel-q">
+                        <textarea id="text-input-q" class="w-full h-32 p-2 border border-gray-300 rounded-lg" placeholder="Nhập câu hỏi của bạn ở đây..."></textarea>
+                    </div>
+                    <div id="panel-q-image" class="tab-panel-q hidden">
+                        <input type="file" id="image-upload-q" accept="image/*" class="w-full text-sm text-gray-500
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-lg file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-indigo-50 file:text-indigo-700
+                            hover:file:bg-indigo-100 cursor-pointer">
+                        <button id="ocr-btn-q" class="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-150 mt-3">Quét ảnh (OCR) - Câu hỏi</button>
+                    </div>
+                    <div id="panel-q-voice" class="tab-panel-q hidden">
+                        <button id="voice-input-btn" class="w-full bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition duration-150">
+                            Nhấn để nói...
+                        </button>
+                    </div>
+                </div>
+                 <!-- Nút tìm kiếm (MỚI) -->
+                <div class="rounded-lg border border-gray-200 p-4 bg-white shadow-sm">
+                    <button id="compare-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-150">
+                        4. Tìm & So sánh
+                    </button>
+                     <div id="status" class="text-sm text-gray-500 mt-2 italic">Trạng thái: Sẵn sàng...</div>
+                </div>
+            </div>
+
+            <!-- Cột 3: Nhập Đáp án & Kết quả -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="rounded-lg border border-gray-200 p-4 bg-white shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">5. Nhập Đáp án (Tùy chọn)</h3>
+                    
+                    <!-- Tabs -->
+                    <div class="border-b border-gray-200 mb-4">
+                        <nav class="flex space-x-4" aria-label="Tabs">
+                            <button id="tab-a-text" class="tab-btn-a px-3 py-2 font-medium text-sm rounded-t-lg border-b-2 border-blue-600 text-blue-600">Gõ tay</button>
+                            <button id="tab-a-image" class="tab-btn-a px-3 py-2 font-medium text-sm rounded-t-lg border-b-2 border-transparent text-gray-500 hover:text-gray-700">Tải ảnh (OCR)</button>
+                        </nav>
+                    </div>
+
+                    <!-- Tab Panels -->
+                    <div id="panel-a-text" class="tab-panel-a">
+                        <textarea id="text-input-a" class="w-full h-32 p-2 border border-gray-300 rounded-lg" placeholder="Nhập các lựa chọn đáp án ở đây..."></textarea>
+                    </div>
+                    <div id="panel-a-image" class="tab-panel-a hidden">
+                        <input type="file" id="image-upload-a" accept="image/*" class="w-full text-sm text-gray-500
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-lg file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-indigo-50 file:text-indigo-700
+                            hover:file:bg-indigo-100 cursor-pointer">
+                        <button id="ocr-btn-a" class="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-150 mt-3">Quét ảnh (OCR) - Đáp án</button>
+                    </div>
+                </div>
+                
+                <div class="rounded-lg border border-gray-200 p-4 bg-white shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">6. Kết quả So sánh</h3>
+                    <div id="compare-result" class="w-full min-h-[10rem] bg-gray-50 rounded-lg p-3 text-gray-700 border border-gray-200 overflow-y-auto">
+                        Kết quả so sánh (tô sáng) sẽ hiện ở đây...
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        // --- Lớp quản lý mô hình AI (Whisper) ---
+        class SpeechRecognitionPipeline {
+            static task = 'automatic-speech-recognition';
+            // ĐÃ NÂNG CẤP TỐI ĐA: Dùng mô hình 'small' (lớn, chính xác)
+            static model = 'Xenova/whisper-small.en'; 
+            static instance = null;
+
+            static async getInstance(progress_callback = null) {
+                if (this.instance === null) {
+                    try {
+                        const { env, pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1');
+                        // Ép thư viện tải mô hình từ xa (Hugging Face CDN)
+                        env.allowLocalModels = false;
+                        env.allowRemoteModels = true;
+                        this.instance = await pipeline(this.task, this.model, { 
+                            progress_callback
+                            // ĐÃ XÓA: chunk_length_s và stride_length_s khỏi đây.
+                        });
+                    } catch (error) {
+                        console.error("Không thể tải mô hình AI:", error);
+                        throw error;
+                    }
+                }
+                return this.instance;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Biến toàn cục
+            let audioFileUrl = null; // Lưu URL của file MP3
+            let transcriptContent = ""; // Lưu nội dung transcript
+
+            // Cột 1: Tải file & Tạo Transcript
+            const audioUpload = document.getElementById('audio-upload');
+            const audioPlayer = document.getElementById('audio-player');
+            const generateTranscriptBtn = document.getElementById('generate-transcript-btn');
+            const transcriptDisplay = document.getElementById('transcript-display');
+            const transcriptStatus = document.getElementById('transcript-status');
+            const transcriptProgress = document.getElementById('transcript-progress');
+            
+            // Cột 2: Câu hỏi
+            const textInputQ = document.getElementById('text-input-q');
+            const imageUploadQ = document.getElementById('image-upload-q');
+            const ocrBtnQ = document.getElementById('ocr-btn-q');
+            const voiceInputBtn = document.getElementById('voice-input-btn');
+            const compareBtn = document.getElementById('compare-btn');
+            const status = document.getElementById('status');
+
+            // Cột 3: Đáp án
+            const textInputA = document.getElementById('text-input-a');
+            const imageUploadA = document.getElementById('image-upload-a');
+            const ocrBtnA = document.getElementById('ocr-btn-a');
+            const compareResult = document.getElementById('compare-result');
+
+            // --- Xử lý Cột 1: Tải MP3 ---
+            audioUpload.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    if (audioFileUrl) {
+                        URL.revokeObjectURL(audioFileUrl);
+                    }
+                    audioFileUrl = URL.createObjectURL(file);
+                    audioPlayer.src = audioFileUrl;
+                    audioPlayer.style.display = 'block'; // Sửa lỗi hiển thị
+                    transcriptDisplay.textContent = "Sẵn sàng tạo transcript...";
+                    transcriptStatus.textContent = `Đã tải: ${file.name}.`;
+                }
+            });
+
+            // --- Xử lý Cột 1: Nút Tạo Transcript (Client-side) ---
+            generateTranscriptBtn.addEventListener('click', async () => {
+                if (!audioFileUrl) {
+                    transcriptStatus.textContent = "Lỗi: Vui lòng chọn một tệp MP3 trước.";
+                    return;
+                }
+
+                transcriptStatus.textContent = "Đang khởi tạo mô hình AI...";
+                transcriptDisplay.textContent = "";
+                transcriptProgress.classList.remove('hidden');
+                transcriptProgress.value = 0;
+                generateTranscriptBtn.disabled = true;
+                generateTranscriptBtn.textContent = "Đang xử lý...";
+
+                try {
+                    // Tải mô hình
+                    const transcriber = await SpeechRecognitionPipeline.getInstance((progress) => {
+                        if (progress.status === 'download' || progress.status === 'progress') {
+                            // Sửa lỗi thanh tiến trình
+                            const percentage = (progress.total > 0) ? (progress.loaded / progress.total) * 100 : 0;
+                            transcriptStatus.textContent = `Đang tải mô hình: ${progress.file} (${percentage.toFixed(0)}%)`;
+                            transcriptProgress.value = percentage;
+                        } else {
+                            transcriptStatus.textContent = `Trạng thái: ${progress.status}`;
+                        }
+                    });
+
+                    transcriptStatus.textContent = "Đang xử lý âm thanh... (Việc này có thể mất vài phút)";
+                    transcriptProgress.value = 0;
+                    
+                    // Chạy xử lý
+                    const output = await transcriber(audioFileUrl, {
+                        // ĐÃ THÊM: Các tham số xử lý file dài vào đúng vị trí này.
+                        chunk_length_s: 30,
+                        stride_length_s: 5,
+                        progress_callback: (progress) => {
+                            if (progress.status === 'transcribing') {
+                                const percentage = (progress.total_chunks > 0) ? (progress.processed_chunks / progress.total_chunks) * 100 : 0;
+                                transcriptProgress.value = percentage;
+                                transcriptStatus.textContent = `Đang xử lý... (${percentage.toFixed(0)}%)`;
+                            }
+                        }
+                    });
+
+                    transcriptContent = output.text; // Lưu transcript
+                    transcriptDisplay.textContent = transcriptContent;
+                    transcriptStatus.textContent = "Hoàn thành!";
+                    transcriptProgress.classList.add('hidden');
+                    status.textContent = "Tạo transcript thành công. Sẵn sàng so sánh.";
+
+                } catch (error) {
+                    console.error("Lỗi khi xử lý âm thanh (client-side):", error);
+                    transcriptDisplay.textContent = `Đã xảy ra lỗi khi tạo transcript. Chi tiết: ${error.message}.`;
+                    transcriptStatus.textContent = "Xử lý thất bại.";
+                    transcriptProgress.classList.add('hidden');
+                } finally {
+                    generateTranscriptBtn.disabled = false;
+                    generateTranscriptBtn.textContent = "Tạo Transcript từ MP3";
+                }
+            });
+
+            // --- Xử lý Cột 2: Chuyển Tab (Câu hỏi) ---
+            const tabsQ = document.querySelectorAll('.tab-btn-q');
+            const panelsQ = document.querySelectorAll('.tab-panel-q');
+            tabsQ.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabsQ.forEach(t => {
+                        t.classList.remove('border-blue-600', 'text-blue-600');
+                        t.classList.add('border-transparent', 'text-gray-500');
+                    });
+                    tab.classList.add('border-blue-600', 'text-blue-600');
+                    tab.classList.remove('border-transparent', 'text-gray-500');
+
+                    const targetPanel = document.getElementById(tab.id.replace('tab-q', 'panel-q'));
+                    panelsQ.forEach(p => p.classList.add('hidden'));
+                    targetPanel.classList.remove('hidden');
+                });
+            });
+
+            // --- Xử lý Cột 3: Chuyển Tab (Đáp án) ---
+            const tabsA = document.querySelectorAll('.tab-btn-a');
+            const panelsA = document.querySelectorAll('.tab-panel-a');
+            tabsA.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabsA.forEach(t => {
+                        t.classList.remove('border-blue-600', 'text-blue-600');
+                        t.classList.add('border-transparent', 'text-gray-500');
+                    });
+                    tab.classList.add('border-blue-600', 'text-blue-600');
+                    tab.classList.remove('border-transparent', 'text-gray-500');
+
+                    const targetPanel = document.getElementById(tab.id.replace('tab-a', 'panel-a'));
+                    panelsA.forEach(p => p.classList.add('hidden'));
+                    targetPanel.classList.remove('hidden');
+                });
+            });
+
+            // --- Xử lý OCR (Hàm chung) ---
+            async function runOCR(file, inputElement) {
+                if (!file) {
+                    status.textContent = "Vui lòng chọn một tệp ảnh.";
+                    return;
+                }
+                status.textContent = "Đang quét ảnh (OCR)...";
+                try {
+                    const { data: { text } } = await Tesseract.recognize(file, 'eng');
+                    inputElement.value = text;
+                    status.textContent = "Quét ảnh thành công.";
+                } catch (error) {
+                    console.error("Lỗi OCR:", error);
+                    status.textContent = "Lỗi khi quét ảnh.";
+                }
+            }
+            
+            ocrBtnQ.addEventListener('click', () => runOCR(imageUploadQ.files[0], textInputQ));
+            ocrBtnA.addEventListener('click', () => runOCR(imageUploadA.files[0], textInputA));
+
+            // --- Xử lý Giọng nói (Câu hỏi) ---
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                const recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.lang = 'en-US';
+
+                voiceInputBtn.addEventListener('click', () => {
+                    status.textContent = "Đang lắng nghe...";
+                    voiceInputBtn.textContent = "Đang lắng nghe...";
+                    voiceInputBtn.disabled = true;
+                    try { recognition.start(); } catch(e) {
+                        console.error("Lỗi khi bắt đầu nhận diện giọng nói:", e);
+                        status.textContent = "Lỗi: Không thể bắt đầu nhận diện.";
+                        voiceInputBtn.textContent = "Nhấn để nói...";
+                        voiceInputBtn.disabled = false;
+                    }
+                });
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    textInputQ.value = transcript;
+                    status.textContent = "Đã nhận diện giọng nói.";
+                    document.getElementById('tab-q-text').click();
+                };
+
+                recognition.onend = () => {
+                    voiceInputBtn.textContent = "Nhấn để nói...";
+                    voiceInputBtn.disabled = false;
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Lỗi nhận diện giọng nói:', event.error);
+                    status.textContent = `Lỗi: ${event.error}`;
+                    voiceInputBtn.textContent = "Nhấn để nói...";
+                    voiceInputBtn.disabled = false;
+                };
+
+            } else {
+                voiceInputBtn.disabled = true;
+                voiceInputBtn.textContent = "Trình duyệt không hỗ trợ";
+                voiceInputBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+            }
+            
+            // --- Xử lý Nút "Tìm & So sánh" ---
+            compareBtn.addEventListener('click', () => {
+                const questionText = textInputQ.value.trim();
+                const answerText = textInputA.value.trim();
+
+                if (!transcriptContent) {
+                    status.textContent = "Lỗi: Vui lòng tạo transcript trước.";
+                    return;
+                }
+                if (!questionText && !answerText) {
+                    status.textContent = "Lỗi: Vui lòng nhập câu hỏi hoặc đáp án để so sánh.";
+                    return;
+                }
+
+                status.textContent = "Đang so sánh...";
+                
+                // --- BẮT ĐẦU CẬP NHẬT ---
+                
+                // Hàm lấy từ khóa (đã sửa)
+                const getKeywords = (text) => {
+                    const commonWords = new Set(['the', 'a', 'an', 'is', 'are', 'was', 'were', 'in', 'on', 'at', 'to', 'for', 'of', 'what', 'where', 'when', 'who', 'why', 'how']);
+                    return text.toLowerCase()
+                               .replace(/[^a-z0-9\s:]/g, '') // Giữ lại dấu hai chấm (:)
+                               .split(/\s+/) 
+                               .filter(word => (word.length > 2 || /^\d+:\d+$/.test(word)) && !commonWords.has(word)); // Giữ lại chuỗi giờ (vd: 9:00)
+                };
+                
+                const questionKeywords = getKeywords(questionText);
+                let answerKeywords = getKeywords(answerText);
+                
+                // Thêm logic "chuẩn hóa" thời gian cho từ khóa đáp án
+                const normalizedAnswerKeywords = [];
+                answerKeywords.forEach(keyword => {
+                    normalizedAnswerKeywords.push(keyword); // Thêm từ gốc
+                    if (keyword === '9:00' || keyword === 'nine') {
+                        normalizedAnswerKeywords.push("9 o'clock");
+                    }
+                    if (keyword === '8:30' || keyword === 'eight-thirty') {
+                        normalizedAnswerKeywords.push("8.30"); // Khớp với "8.30" trong transcript
+                    }
+                    if (keyword === '6:00' || keyword === 'six') {
+                        normalizedAnswerKeywords.push("6 o'clock");
+                    }
+                });
+                // Lọc trùng lặp
+                const uniqueAnswerKeywords = [...new Set(normalizedAnswerKeywords)];
+                // --- KẾT THÚC CẬP NHẬT ---
+
+                let highlightedTranscript = transcriptContent;
+                let qFound = 0;
+                let aFound = 0;
+
+                // Tô sáng từ khóa đáp án (màu xanh)
+                uniqueAnswerKeywords.forEach(keyword => { // Dùng mảng đã chuẩn hóa
+                    // Thoát các ký tự đặc biệt (như dấu chấm trong "8.30")
+                    const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(`\\b(${escapedKeyword})\\b`, 'gi'); 
+                    if (regex.test(highlightedTranscript)) {
+                        aFound++;
+                        highlightedTranscript = highlightedTranscript.replace(regex, '<mark class="highlight-answer">$1</mark>');
+                    }
+                });
+                
+                // Tô sáng từ khóa câu hỏi (màu vàng)
+                questionKeywords.forEach(keyword => {
+                    const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(`\\b(${escapedKeyword})\\b`, 'gi');
+                    if (regex.test(highlightedTranscript)) {
+                        qFound++;
+                        // Chỉ thay thế nếu nó chưa được tô sáng
+                        highlightedTranscript = highlightedTranscript.replace(regex, (match) => {
+                            if (match.includes('highlight-answer')) return match; // Giữ màu xanh
+                            return `<mark class="highlight-question">${match}</mark>`;
+                        });
+                    }
+                });
+
+                compareResult.innerHTML = `
+                    <p class="text-sm mb-2">Đã tìm thấy <strong>${qFound} / ${questionKeywords.length}</strong> từ khóa câu hỏi (màu vàng).</p>
+                    <p class="text-sm mb-4">Đã tìm thấy <strong>${aFound} / ${uniqueAnswerKeywords.length}</strong> từ khóa đáp án (màu xanh).</p>
+                    <hr class="mb-4">
+                    ${highlightedTranscript.replace(/\n/g, '<br>')}
+                `;
+                status.textContent = "So sánh hoàn tất.";
+            });
+            
+        });
+    </script>
+</body>
+</html>
+

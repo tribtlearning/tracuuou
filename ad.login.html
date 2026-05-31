@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Đăng Nhập Quản Trị | Hệ Thống Tra Cứu</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Cấu hình giao diện thương hiệu #005625 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#005625',
+              light: '#007030', 
+              dark: '#003d1a',
+              soft: '#f8faf9',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Alpine.js (Bắt buộc giữ lại để nút ẩn/hiện mật khẩu hoạt động) -->
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <!-- Google Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background-color: #f1f5f9; 
+      -webkit-font-smoothing: antialiased;
+    }
+    [x-cloak] { display: none !important; }
+    
+    /* Hiệu ứng mờ dần cho card */
+    .login-animate {
+      animation: fadeInScale 0.5s ease-out forwards;
+    }
+    @keyframes fadeInScale {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body class="text-slate-900 min-h-screen flex flex-col overflow-x-hidden">
+
+  <!-- Navbar Placeholder -->
+  <header id="navbar-placeholder" class="fixed top-0 w-full z-[100] bg-white border-b border-slate-200 shadow-sm h-[70px]"></header>
+
+  <main class="flex-grow flex items-center justify-center p-4 pt-24">
+    <div class="w-full max-w-md login-animate">
+      
+      <!-- Biểu tượng Thương hiệu -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-brand text-white text-3xl shadow-2xl shadow-brand/30 mb-4 transform -rotate-3">
+          <i class="fa-solid fa-user-lock"></i>
+        </div>
+        <h1 class="text-3xl font-black text-slate-800 tracking-tight uppercase italic">Admin Portal</h1>
+        <p class="text-slate-500 font-medium text-sm mt-1">Xác thực quyền hạn để quản trị hệ thống</p>
+      </div>
+
+      <!-- Khung Đăng Nhập -->
+      <div class="bg-white rounded-[2.5rem] border border-slate-200 shadow-2xl overflow-hidden relative">
+        <!-- Dải màu trên cùng -->
+        <div class="h-2 bg-gradient-to-r from-brand-dark via-brand to-brand-light w-full"></div>
+        
+        <form id="loginForm" class="p-8 sm:p-10 space-y-6">
+          
+          <!-- Trường Email -->
+          <div class="space-y-2">
+            <label for="email" class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Tài khoản Email</label>
+            <div class="relative group">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-brand transition-colors">
+                <i class="fa-solid fa-envelope-open"></i>
+              </div>
+              <input type="email" id="email" 
+                class="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-brand/10 focus:border-brand outline-none font-bold text-sm transition-all placeholder-slate-300" 
+                placeholder="admin@domain.com" required>
+            </div>
+          </div>
+
+          <!-- Trường Mật khẩu -->
+          <div class="space-y-2" x-data="{ show: false }">
+            <label for="password" class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Mật mã truy cập</label>
+            <div class="relative group">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-brand transition-colors">
+                <i class="fa-solid fa-key"></i>
+              </div>
+              <input :type="show ? 'text' : 'password'" id="password" 
+                class="block w-full pl-11 pr-12 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-brand/10 focus:border-brand outline-none font-bold text-sm transition-all placeholder-slate-300" 
+                placeholder="••••••••" required>
+              <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-brand transition-colors focus:outline-none">
+                <i class="fa-solid" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Khu vực hiển thị lỗi -->
+          <div id="errorMsg" class="hidden animate-in slide-in-from-top-2 duration-300">
+            <div class="bg-red-50 border-l-4 border-red-500 text-red-600 px-4 py-3 rounded-r-xl text-xs font-bold flex items-center gap-3">
+              <i class="fa-solid fa-circle-exclamation text-base"></i>
+              <span id="errorText">Lỗi đăng nhập!</span>
+            </div>
+          </div>
+
+          <!-- Nút Đăng nhập -->
+          <button type="submit" id="submitBtn" class="w-full py-4 bg-brand hover:bg-brand-light text-white font-black rounded-2xl shadow-xl shadow-brand/20 transition-all hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-3 uppercase text-xs tracking-widest">
+            <span id="btnText">TIẾN VÀO HỆ THỐNG</span>
+            <i id="btnIcon" class="fa-solid fa-arrow-right-long"></i>
+          </button>
+
+        </form>
+      </div>
+
+      <!-- Footer trang login -->
+      <div class="mt-10 text-center space-y-4">
+        <a href="/" class="text-xs font-black text-slate-400 hover:text-brand transition-all uppercase tracking-widest flex items-center justify-center gap-2 group">
+          <i class="fa-solid fa-house-chimney group-hover:-translate-y-0.5 transition-transform"></i> 
+          Trở về trang chủ
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+    // ==== FIREBASE CONFIG (Đã đồng bộ Key ...Z92M) ====
+    const firebaseConfig = {
+      apiKey: "AIzaSyAjBMA-atKKvecY8CWeQXZsIQ3yHckZ92M",
+      authDomain: "tracuu-d3ee9.firebaseapp.com",
+      projectId: "tracuu-d3ee9",
+      storageBucket: "tracuu-d3ee9.appspot.com",
+      messagingSenderId: "593568604435",
+      appId: "1:593568604435:web:9a5145457a8ee734143ae6",
+      measurementId: "G-R0M6Y502NP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const loginForm = document.getElementById("loginForm");
+    const errorMsg = document.getElementById("errorMsg");
+    const errorText = document.getElementById("errorText");
+    const submitBtn = document.getElementById("submitBtn");
+    const btnText = document.getElementById("btnText");
+    const btnIcon = document.getElementById("btnIcon");
+
+    // Lắng nghe trạng thái đăng nhập để tự động redirect
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Sử dụng subjects.html (đầy đủ tên tệp) để tránh lỗi vòng lặp chuyển hướng
+        window.location.replace("exportdata.html");
+      }
+    });
+
+    // Xử lý sự kiện đăng nhập
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      // Trạng thái Loading UI
+      errorMsg.classList.add("hidden");
+      submitBtn.disabled = true;
+      submitBtn.classList.add("opacity-60", "cursor-not-allowed");
+      btnText.textContent = "ĐANG XÁC THỰC...";
+      btnIcon.className = "fa-solid fa-spinner fa-spin";
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        // Sau khi login thành công, onAuthStateChanged sẽ tự chuyển hướng về subjects.html
+      } catch (err) {
+        console.error("Login Error:", err.code);
+        errorMsg.classList.remove("hidden");
+        
+        // Việt hóa thông báo lỗi Firebase
+        let message = "Thông tin đăng nhập không chính xác!";
+        if (err.code === "auth/invalid-credential") {
+          message = "Email hoặc mật khẩu không đúng!";
+        } else if (err.code === "auth/too-many-requests") {
+          message = "Tài khoản bị tạm khóa do nhập sai nhiều lần!";
+        } else if (err.code === "auth/network-request-failed") {
+          message = "Lỗi kết nối internet!";
+        }
+        
+        errorText.textContent = message;
+
+        // Hoàn tác trạng thái UI
+        submitBtn.disabled = false;
+        submitBtn.classList.remove("opacity-60", "cursor-not-allowed");
+        btnText.textContent = "TIẾN VÀO HỆ THỐNG";
+        btnIcon.className = "fa-solid fa-arrow-right-long";
+      }
+    });
+
+    // SỬA TÊN FILE MENU CHUẨN XÁC
+    fetch('/menu.html')
+      .then(r => r.ok ? r.text() : "")
+      .then(html => {
+        if(html) document.getElementById('navbar-placeholder').innerHTML = html;
+      })
+      .catch(err => console.log('Bỏ qua nạp navbar:', err));
+  </script>
+</body>
+</html>

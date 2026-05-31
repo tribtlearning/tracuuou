@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Cảm ơn đã sử dụng | tracuu.hugo.io.vn</title>
+  <meta name="description" content="Hệ thống tra cứu câu hỏi học tập TVU đã hoàn tất sứ mệnh. Cảm ơn bạn đã đồng hành!">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="data:,">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Cấu hình màu thương hiệu #005625 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#005625',
+              light: '#007030',
+              dark: '#003d1a',
+              soft: '#f8faf9',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          keyframes: {
+            fadeUp: {
+              '0%': { opacity: '0', transform: 'translateY(24px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            scaleIn: {
+              '0%': { opacity: '0', transform: 'scale(0.85)' },
+              '100%': { opacity: '1', transform: 'scale(1)' },
+            },
+            floatY: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+            shimmer: {
+              '0%': { backgroundPosition: '-400px 0' },
+              '100%': { backgroundPosition: '400px 0' },
+            }
+          },
+          animation: {
+            'fade-up': 'fadeUp 0.7s ease both',
+            'fade-up-2': 'fadeUp 0.7s 0.15s ease both',
+            'fade-up-3': 'fadeUp 0.7s 0.3s ease both',
+            'fade-up-4': 'fadeUp 0.7s 0.45s ease both',
+            'scale-in': 'scaleIn 0.6s ease both',
+            'float': 'floatY 3.5s ease-in-out infinite',
+            'shimmer': 'shimmer 2.5s linear infinite',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f1f5f9;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Lưới nền nhẹ giống vibe tech */
+    .bg-grid {
+      background-image:
+        linear-gradient(rgba(0,86,37,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,86,37,.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* Vòng hào quang xanh lá */
+    .glow-ring {
+      box-shadow: 0 0 0 8px rgba(0,86,37,.08), 0 0 0 20px rgba(0,86,37,.04);
+    }
+
+    /* Shimmer badge */
+    .shimmer-badge {
+      background: linear-gradient(90deg, #005625 0%, #00a84f 50%, #005625 100%);
+      background-size: 400px 100%;
+      animation: shimmer 2.5s linear infinite;
+    }
+
+    /* Đường kẻ phân cách có gradient */
+    .divider-fade {
+      background: linear-gradient(90deg, transparent, #e2e8f0 30%, #e2e8f0 70%, transparent);
+      height: 1px;
+    }
+
+    /* Stars particle */
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: #005625;
+      opacity: 0;
+      animation: starPop ease forwards;
+    }
+    @keyframes starPop {
+      0%   { transform: scale(0) rotate(0deg); opacity: 0.8; }
+      80%  { opacity: 0.5; }
+      100% { transform: scale(1.6) rotate(45deg) translate(var(--tx), var(--ty)); opacity: 0; }
+    }
+  </style>
+</head>
+<body class="text-slate-900 min-h-screen flex flex-col overflow-x-hidden bg-grid">
+
+  <!-- Navbar Placeholder -->
+  <header id="navbar-placeholder" class="fixed top-0 w-full z-[100] bg-white border-b border-slate-200 shadow-sm"></header>
+
+  <!-- Main -->
+  <main class="flex-grow flex items-center justify-center px-4 pt-20 pb-16">
+    <div class="w-full max-w-2xl mx-auto">
+
+      <!-- Card chính -->
+      <div class="bg-white rounded-3xl sm:rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden animate-scale-in">
+
+        <!-- Đầu card gradient -->
+        <div class="relative px-6 py-10 sm:px-12 sm:py-14 text-center bg-gradient-to-b from-brand/6 to-transparent border-b border-slate-100">
+
+          <!-- Hạt confetti nhỏ (trang trí tĩnh) -->
+          <span class="absolute top-6 left-10 w-2 h-2 rounded-full bg-brand/20 hidden sm:block"></span>
+          <span class="absolute top-12 left-6 w-1.5 h-1.5 rounded-full bg-emerald-300/60 hidden sm:block"></span>
+          <span class="absolute top-8 right-12 w-2 h-2 rounded-full bg-brand/15 hidden sm:block"></span>
+          <span class="absolute top-16 right-8 w-1 h-1 rounded-full bg-emerald-400/50 hidden sm:block"></span>
+
+          <!-- Icon chính -->
+          <div class="relative inline-block mb-6 sm:mb-8 animate-float">
+            <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white border-2 border-slate-100 flex items-center justify-center glow-ring shadow-xl mx-auto">
+              <i class="fa-solid fa-flag-checkered text-brand text-4xl sm:text-5xl"></i>
+            </div>
+            <!-- Dấu tick nhỏ góc -->
+            <span class="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center shadow-md border-2 border-white">
+              <i class="fa-solid fa-check text-white text-[10px]"></i>
+            </span>
+          </div>
+
+          <!-- Badge trạng thái -->
+          <div class="inline-flex items-center gap-2 shimmer-badge text-white text-[10px] sm:text-xs font-black uppercase tracking-[0.18em] px-4 py-1.5 rounded-full mb-5 sm:mb-6 shadow-lg shadow-brand/20 animate-fade-up">
+            <i class="fa-solid fa-circle-check text-[9px]"></i>
+            SỨ MỆNH HOÀN TẤT
+          </div>
+
+          <!-- Tiêu đề -->
+          <h1 class="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight mb-3 sm:mb-4 animate-fade-up-2">
+            Cảm ơn bạn<br>
+            <span class="text-brand">đã đồng hành!</span>
+          </h1>
+
+          <!-- Mô tả -->
+          <p class="text-slate-500 text-sm sm:text-base font-medium leading-relaxed max-w-md mx-auto animate-fade-up-3">
+            Hệ thống <span class="font-bold text-slate-700">Tra Cứu Học Tập TVU</span> đã hoàn thành
+            trọn vẹn sứ mệnh hỗ trợ sinh viên ôn thi và tra cứu tài liệu.
+          </p>
+        </div>
+
+        <!-- Nội dung phụ -->
+        <div class="px-6 py-8 sm:px-12 sm:py-10 animate-fade-up-4">
+
+          <!-- Thống kê / điểm nhấn -->
+          <div class="grid grid-cols-3 gap-3 sm:gap-4 mb-8">
+            <div class="text-center bg-slate-50 rounded-2xl px-3 py-4 sm:py-5 border border-slate-100">
+              <div class="text-xl sm:text-2xl font-black text-brand mb-1"><i class="fa-solid fa-book-open"></i></div>
+              <div class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wide">Tài liệu</div>
+              <div class="text-[10px] sm:text-xs text-slate-400 mt-0.5">Nơi từng hỗ trợ tra cứu</div>
+            </div>
+            <div class="text-center bg-slate-50 rounded-2xl px-3 py-4 sm:py-5 border border-slate-100">
+              <div class="text-xl sm:text-2xl font-black text-brand mb-1"><i class="fa-solid fa-users"></i></div>
+              <div class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wide">Sinh viên</div>
+              <div class="text-[10px] sm:text-xs text-slate-400 mt-0.5">Đã đồng hành cùng bạn trên chặn đường học tập</div>
+            </div>
+            <div class="text-center bg-slate-50 rounded-2xl px-3 py-4 sm:py-5 border border-slate-100">
+              <div class="text-xl sm:text-2xl font-black text-brand mb-1"><i class="fa-solid fa-heart"></i></div>
+              <div class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wide">Tâm huyết</div>
+              <div class="text-[10px] sm:text-xs text-slate-400 mt-0.5">100%</div>
+            </div>
+          </div>
+
+          <!-- Đường kẻ -->
+          <div class="divider-fade mb-7"></div>
+
+          <!-- Lời nhắn cuối -->
+          <div class="flex gap-4 items-start bg-brand/5 border border-brand/10 rounded-2xl p-4 sm:p-5 mb-7">
+            <span class="flex-shrink-0 w-9 h-9 rounded-xl bg-brand flex items-center justify-center shadow-md shadow-brand/20 mt-0.5">
+              <i class="fa-solid fa-quote-left text-white text-sm"></i>
+            </span>
+            <p class="text-slate-600 text-sm sm:text-base font-medium leading-relaxed italic">
+              Dù hệ thống đã dừng hoạt động, tri thức bạn đã tích lũy vẫn mãi thuộc về bạn.
+              Chúc bạn thành công trên con đường phía trước!
+            </p>
+          </div>
+
+          <!-- Thông tin tác giả nhỏ -->
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+            <span class="flex items-center gap-1.5">
+              <i class="fa-solid fa-location-dot text-brand/60"></i>
+              <span class="font-semibold text-slate-500">tracuu.hugo.io.vn</span>
+            </span>
+            <span class="flex items-center gap-1.5">
+              <i class="fa-regular fa-calendar text-brand/60"></i>
+              Phục vụ sinh viên TVU
+            </span>
+            <span class="flex items-center gap-1.5">
+              <i class="fa-solid fa-code text-brand/60"></i>
+              Nhóm sinh viên
+              <i class="fa-solid fa-heart text-red-400 text-[10px]"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chú thích ngoài card -->
+      <p class="text-center text-xs text-slate-400 mt-5 font-medium animate-fade-up-4">
+        Bạn vẫn có thể lưu lại trang này để ghi nhớ khoảng thời gian đã dùng hệ thống 💚
+      </p>
+
+    </div>
+  </main>
+
+  <script>
+    // Load menu navbar nếu có
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch('/menu.html')
+        .then(r => r.ok ? r.text() : "")
+        .then(h => { if (h) document.getElementById('navbar-placeholder').innerHTML = h; })
+        .catch(() => {});
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Tra cứu câu hỏi học tập TVU & Tiện ích | tracuu.hugo.io.vn</title>
+  <meta name="description" content="Hệ thống tra cứu câu hỏi, tài liệu học tập theo môn học. Nhanh chóng, tiện lợi và miễn phí.">
+  <link rel="canonical" href="https://tracuu.hugo.io.vn/">
+  <meta name="robots" content="index, follow">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="data:,">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Cấu hình màu thương hiệu #005625 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#005625',
+              light: '#007030', 
+              dark: '#003d1a',
+              soft: '#f8faf9',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- MathJax -->
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background-color: #f1f5f9; 
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    
+    #subjectDropdownMenu {
+      z-index: 9999 !important;
+      border: 1px solid #e2e8f0;
+      min-width: 100%;
+    }
+
+    .text-contrast {
+      color: #0f172a;
+      text-rendering: optimizeLegibility;
+    }
+  </style>
+</head>
+<body class="text-slate-900 min-h-screen flex flex-col overflow-x-hidden">
+
+  <!-- Navbar Placeholder -->
+  <header id="navbar-placeholder" class="fixed top-0 w-full z-[100] bg-white border-b border-slate-200 shadow-sm"></header>
+
+  <!-- Container -->
+  <main class="flex-grow container mx-auto px-3 sm:px-4 pt-28 pb-16 max-w-5xl relative w-full">
+    
+    <!-- Online Counter -->
+    <div class="mb-6 sm:mb-8 flex justify-center">
+      <div class="inline-flex items-center gap-2 sm:gap-3 bg-white border border-slate-200 px-5 sm:px-6 py-2 rounded-full shadow-sm text-xs sm:text-sm font-bold text-slate-600">
+        <span class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        Hệ thống đang có <span id="online-counter" class="text-brand text-base sm:text-lg">0</span> người online
+      </div>
+    </div>
+
+    <!-- Khối tìm kiếm -->
+    <div class="bg-white rounded-3xl sm:rounded-[2.5rem] border border-slate-200 shadow-xl relative mb-8 sm:mb-12 overflow-visible mx-0">
+      <div class="px-5 py-8 sm:px-8 sm:py-10 text-center border-b border-slate-50 bg-gradient-to-b from-brand/5 to-transparent rounded-t-3xl sm:rounded-t-[2.5rem]">
+        <h1 class="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight mb-2">TRA CỨU HỌC TẬP</h1>
+        <p class="text-slate-500 text-sm sm:text-base font-medium opacity-80 px-2">Ngân hàng câu hỏi trắc nghiệm & tài liệu ôn thi trực tuyến</p>
+      </div>
+
+      <form id="searchForm" class="p-5 sm:p-12 sm:pb-14">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mb-8 sm:mb-10">
+          
+          <!-- Dropdown Môn Học -->
+          <div class="relative">
+            <label class="block text-[11px] sm:text-xs font-black text-brand uppercase tracking-widest mb-2 sm:mb-3 ml-1 sm:ml-2 italic">1. Chọn môn học cần tra</label>
+            <button id="subjectDropdownBtn" type="button" class="w-full text-left px-4 sm:px-6 py-3.5 sm:py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-brand/10 focus:border-brand flex justify-between items-center transition-all group shadow-sm">
+              <span id="subjectDropdownText" class="text-slate-600 truncate text-sm sm:text-lg font-bold">-- Bấm để chọn môn học --</span>
+              <i class="fa-solid fa-chevron-down text-slate-400 group-hover:text-brand transition-colors text-xs sm:text-sm ml-2"></i>
+            </button>
+            
+            <div id="subjectDropdownMenu" class="hidden absolute left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-200 border border-slate-200">
+              <div class="p-3 sm:p-4 border-b border-slate-100 bg-slate-50">
+                <div class="relative">
+                  <i class="fa-solid fa-search absolute left-4 top-3 sm:top-3.5 text-slate-400 text-sm"></i>
+                  <input type="text" id="subjectFilterInput" class="w-full pl-10 sm:pl-11 pr-4 py-2.5 sm:py-3 bg-white border border-slate-200 rounded-xl text-sm sm:text-base outline-none focus:border-brand shadow-inner" placeholder="Tìm môn học...">
+                </div>
+              </div>
+              <ul id="subjectList" class="overflow-y-auto custom-scrollbar max-h-60 sm:max-h-80 p-2 space-y-1 bg-white">
+                <li class="px-4 py-10 sm:py-12 text-slate-400 text-sm sm:text-base italic text-center">Đang tải danh sách...</li>
+              </ul>
+            </div>
+            <input type="hidden" id="subjectIdInput" name="subjectId" required>
+          </div>
+
+          <!-- Từ Khóa -->
+          <div>
+            <label class="block text-[11px] sm:text-xs font-black text-brand uppercase tracking-widest mb-2 sm:mb-3 ml-1 sm:ml-2 italic" for="keywordInput">2. Nhập từ khóa nội dung</label>
+            <div class="relative">
+              <i class="fa-solid fa-keyboard absolute left-4 sm:left-6 top-4 sm:top-5 text-slate-300 text-base sm:text-lg"></i>
+              <input id="keywordInput" type="text" class="w-full pl-10 sm:pl-14 pr-4 sm:pr-6 py-3.5 sm:py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-brand/10 focus:border-brand outline-none transition-all font-bold text-sm sm:text-lg placeholder-slate-300 shadow-sm" placeholder="Tìm câu hỏi theo nội dung...">
+            </div>
+          </div>
+        </div>
+
+        <!-- Nút Tìm Kiếm -->
+        <div class="flex justify-center">
+          <button type="submit" class="w-full sm:w-auto px-6 sm:px-16 py-4 sm:py-5 bg-brand hover:bg-brand-light text-white font-black rounded-2xl shadow-2xl shadow-brand/30 transition-all hover:-translate-y-1 active:translate-y-0 gap-3 sm:gap-4 text-base sm:text-lg uppercase tracking-wide sm:tracking-[0.1em] flex items-center justify-center sm:min-w-[320px]">
+            <i class="fa-solid fa-magnifying-glass text-lg sm:text-xl"></i>
+            BẮT ĐẦU TÌM KIẾM
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Khu vực Kết Quả -->
+    <div id="resultSection" class="hidden">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 px-2 sm:px-4 gap-4 border-l-4 border-brand pl-4 sm:pl-5">
+        <h3 class="text-base sm:text-xl font-bold text-slate-800 uppercase tracking-tight">
+          KẾT QUẢ TÌM THẤY: <span id="resultCount" class="text-brand">0</span> CÂU HỎI
+        </h3>
+        <button id="sortBtn" class="hidden items-center justify-center w-full sm:w-auto gap-2 px-5 py-2.5 sm:py-2 bg-white border border-slate-200 text-slate-700 text-xs font-bold uppercase rounded-xl hover:border-brand transition-all shadow-sm">
+          <i class="fa-solid fa-sort-alpha-down"></i> <span>SẮP XẾP A-Z</span>
+        </button>
+      </div>
+      
+      <div id="resultList" class="space-y-4 sm:space-y-6">
+        <!-- Render danh sách câu hỏi -->
+      </div>
+    </div>
+
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getDatabase, ref, onValue, onDisconnect, set, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAjBMA-atKKvecY8CWeQXZsIQ3yHckZ92M",
+      authDomain: "tracuu-d3ee9.firebaseapp.com",
+      projectId: "tracuu-d3ee9",
+      storageBucket: "tracuu-d3ee9.appspot.com",
+      messagingSenderId: "593568604435",
+      appId: "1:593568604435:web:9a5145457a8ee734143ae6",
+      measurementId: "G-R0M6Y502NP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const rtdb = getDatabase(app, "https://tracuu-d3ee9-default-rtdb.asia-southeast1.firebasedatabase.app");
+
+    // Online Counter
+    const onlineCounterEl = document.getElementById('online-counter');
+    const connectionsRef = ref(rtdb, 'connections');
+    const myConnectionRef = push(connectionsRef);
+    onDisconnect(myConnectionRef).remove();
+    set(myConnectionRef, true);
+    onValue(connectionsRef, (s) => {
+      onlineCounterEl.textContent = s.exists() ? Object.keys(s.val()).length : 0;
+    });
+
+    // Elements
+    const subjectDropdownBtn = document.getElementById("subjectDropdownBtn");
+    const subjectDropdownText = document.getElementById("subjectDropdownText");
+    const subjectDropdownMenu = document.getElementById("subjectDropdownMenu");
+    const subjectFilterInput = document.getElementById("subjectFilterInput");
+    const subjectList = document.getElementById("subjectList");
+    const subjectIdInput = document.getElementById("subjectIdInput");
+    const searchForm = document.getElementById("searchForm");
+    const keywordInput = document.getElementById("keywordInput");
+    const resultSection = document.getElementById("resultSection");
+    const resultList = document.getElementById("resultList");
+    const resultCount = document.getElementById("resultCount");
+    const sortBtn = document.getElementById("sortBtn");
+
+    let lastResults = [];
+    let sortAsc = true;
+
+    // Helpers
+    const escapeHtml = (s) => s ? String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m])) : "";
+    const convertToThumbnail = (u) => u?.includes('drive.google.com') ? `https://drive.google.com/thumbnail?id=${u.match(/\/d\/([^/]+)/)?.[1]}` : u;
+
+    // Dropdown Logic
+    subjectDropdownBtn.onclick = (e) => {
+      e.stopPropagation();
+      subjectDropdownMenu.classList.toggle('hidden');
+      if(!subjectDropdownMenu.classList.contains('hidden')) subjectFilterInput.focus();
+    };
+
+    document.onclick = (e) => {
+      if(!subjectDropdownMenu.contains(e.target)) subjectDropdownMenu.classList.add('hidden');
+    };
+
+    async function loadSubjects() {
+      try {
+        const snap = await getDocs(collection(db, "mon_hoc"));
+        const data = [];
+        snap.forEach(d => data.push({ id: d.id, name: d.data().ten_mon || d.id }));
+        data.sort((a,b) => a.name.localeCompare(b.name, 'vi'));
+        
+        subjectList.innerHTML = "";
+        data.forEach(s => {
+          const li = document.createElement('li');
+          li.className = "subject-item";
+          li.dataset.name = s.name.toLowerCase();
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'w-full text-left px-4 sm:px-5 py-3 sm:py-4 rounded-xl text-sm sm:text-base font-bold text-slate-700 hover:bg-brand hover:text-white transition-all outline-none';
+          btn.textContent = s.name;
+          btn.onclick = () => {
+            subjectIdInput.value = s.id;
+            subjectDropdownText.textContent = s.name;
+            subjectDropdownText.className = "text-brand font-black truncate text-sm sm:text-xl";
+            subjectDropdownMenu.classList.add('hidden');
+          };
+          li.appendChild(btn);
+          subjectList.appendChild(li);
+        });
+
+        subjectFilterInput.oninput = () => {
+          const q = subjectFilterInput.value.toLowerCase();
+          subjectList.querySelectorAll('.subject-item').forEach(li => {
+            li.style.display = li.dataset.name.includes(q) ? '' : 'none';
+          });
+        };
+      } catch (e) {
+        subjectList.innerHTML = '<li class="p-4 text-red-500 text-center text-sm font-bold">Lỗi kết nối máy chủ.</li>';
+      }
+    }
+
+    function renderQuestion(data, index) {
+      let choicesHtml = '';
+      const choices = data.lua_chon || {};
+      
+      ["a", "b", "c", "d"].forEach(key => {
+        if (choices[key]) {
+          const isCorrect = key === data.dap_an_dung;
+          const itemClass = isCorrect 
+            ? "p-3 sm:p-4.5 rounded-xl border-2 border-brand bg-brand/5 text-brand font-extrabold relative shadow-sm"
+            : "p-3 sm:p-4.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold hover:border-slate-300 transition-all";
+            
+          const badge = isCorrect ? 'bg-brand text-white' : 'bg-slate-200 text-slate-500';
+          const img = choices[key + "Img"] ? `<img src="${convertToThumbnail(choices[key + "Img"])}" class="max-w-full h-auto max-h-32 rounded-lg mt-3 border border-slate-200 bg-white p-1" alt="">` : '';
+
+          choicesHtml += `
+            <li class="${itemClass} flex flex-col transition-all duration-300">
+              <div class="flex items-start gap-3 sm:gap-4 text-xs sm:text-base">
+                <span class="uppercase flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center text-[9px] sm:text-[10px] rounded sm:rounded-lg font-black shadow-inner ${badge}">${key}</span> 
+                <span class="flex-1 pt-0.5 sm:pt-1 leading-relaxed">${escapeHtml(choices[key])}</span>
+                ${isCorrect ? '<div class="shrink-0 text-brand text-lg sm:text-xl"><i class="fa-solid fa-circle-check"></i></div>' : ''}
+              </div>
+              ${img}
+            </li>`;
+        }
+      });
+
+      const qImg = data.noi_dung_img ? `<div class="mt-4"><img src="${convertToThumbnail(data.noi_dung_img)}" class="max-w-full h-auto max-h-48 sm:max-h-64 rounded-2xl border-2 border-slate-100 p-1 bg-white shadow-md" alt=""></div>` : '';
+
+      const div = document.createElement("div");
+      div.className = "bg-white rounded-2xl sm:rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all duration-500";
+      div.innerHTML = `
+        <div class="p-4 sm:p-7 bg-white">
+          <div class="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-5">
+            <span class="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-brand text-white flex items-center justify-center font-black text-[10px] shadow-md shadow-brand/10 mt-0.5">
+              ${index + 1}
+            </span>
+            <div class="flex-1">
+              <h4 class="text-sm sm:text-lg font-bold text-slate-900 leading-relaxed text-sharp text-contrast">${escapeHtml(data.noi_dung)}</h4>
+              ${qImg}
+            </div>
+          </div>
+          <div class="pl-0 sm:pl-12">
+              <ul class="grid grid-cols-1 gap-3">
+                ${choicesHtml}
+              </ul>
+          </div>
+        </div>
+      `;
+      return div;
+    }
+
+    searchForm.onsubmit = async (e) => {
+      e.preventDefault();
+      if (!subjectIdInput.value) return alert("Vui lòng chọn môn học để tra cứu!");
+
+      resultSection.classList.remove('hidden');
+      resultList.innerHTML = `
+        <div class="py-16 sm:py-24 text-center">
+          <div class="inline-block w-8 h-8 sm:w-10 sm:h-10 border-4 border-brand/20 border-t-brand rounded-full animate-spin mb-3 sm:mb-4"></div>
+          <p class="text-slate-500 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] animate-pulse">Đang tìm kiếm dữ liệu...</p>
+        </div>`;
+      
+      const q = query(collection(db, "cau_hoi"), where("mon_hoc_id", "==", subjectIdInput.value));
+      try {
+        const snap = await getDocs(q);
+        const keyword = keywordInput.value.trim().toLowerCase();
+        const results = [];
+        snap.forEach(d => {
+          const item = d.data();
+          const match = !keyword || item.noi_dung?.toLowerCase().includes(keyword) || Object.values(item.lua_chon || {}).some(v => v?.toString().toLowerCase().includes(keyword));
+          if (match) results.push(item);
+        });
+
+        lastResults = results;
+        if (sortAsc) lastResults.sort((a,b) => (a.noi_dung || "").localeCompare(b.noi_dung || "", 'vi'));
+        
+        resultCount.textContent = lastResults.length;
+        sortBtn.style.display = lastResults.length > 1 ? "flex" : "none";
+        
+        resultList.innerHTML = "";
+        if (lastResults.length === 0) {
+          resultList.innerHTML = `
+            <div class="py-12 sm:py-16 text-center bg-white rounded-2xl sm:rounded-3xl border border-dashed border-slate-300">
+              <i class="fa-solid fa-circle-exclamation text-3xl sm:text-4xl text-slate-200 mb-2 sm:mb-3 block"></i>
+              <p class="text-slate-500 text-sm sm:text-base font-bold">Không tìm thấy câu hỏi phù hợp.</p>
+            </div>`;
+        } else {
+          lastResults.forEach((q, i) => resultList.appendChild(renderQuestion(q, i)));
+        }
+        if (window.MathJax?.typesetPromise) window.MathJax.typesetPromise();
+      } catch (err) {
+        console.error("Lỗi khi tìm kiếm:", err);
+        resultList.innerHTML = '<div class="p-8 sm:p-10 bg-red-50 text-red-600 rounded-2xl sm:rounded-3xl text-center text-sm sm:text-base font-black">LỖI KẾT NỐI HỆ THỐNG</div>';
+      }
+    };
+
+    sortBtn.onclick = () => {
+      sortAsc = !sortAsc;
+      lastResults.sort((a,b) => sortAsc ? (a.noi_dung || "").localeCompare(b.noi_dung || "", 'vi') : (b.noi_dung || "").localeCompare(a.noi_dung || "", 'vi'));
+      sortBtn.innerHTML = `<i class="fa-solid fa-sort-alpha-${sortAsc?'down':'up'}"></i> <span>SẮP XẾP ${sortAsc?'A-Z':'Z-A'}</span>`;
+      resultList.innerHTML = "";
+      lastResults.forEach((q, i) => resultList.appendChild(renderQuestion(q, i)));
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSubjects();
+      fetch('/menu.html')
+        .then(r => r.ok ? r.text() : "")
+        .then(h => { if(h) document.getElementById('navbar-placeholder').innerHTML = h; })
+        .catch(err => console.warn("Không tải được menu.html (có thể do chạy local hoặc file không tồn tại):", err));
+    });
+  </script>
+</body>
+</html>

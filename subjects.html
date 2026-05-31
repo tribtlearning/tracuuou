@@ -1,0 +1,983 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <title>Quản Trị Hệ Thống | Ngân Hàng Câu Hỏi</title>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Cấu hình giao diện thương hiệu #005625 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#005625',
+              light: '#007030', 
+              dark: '#003d1a',
+              soft: '#f8faf9',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Alpine.js -->
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <!-- Google Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- MathJax -->
+  <script async id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background-color: #f1f5f9; 
+      -webkit-font-smoothing: antialiased;
+    }
+    [x-cloak] { display: none !important; }
+    
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+    .mathjax-content { font-size: 1.05em; line-height: 1.6; }
+    
+    .modal-overlay { background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
+    
+    /* Chống mờ chữ khi scale */
+    .text-sharp {
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    .break-words-custom {
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body class="text-slate-900 min-h-screen flex flex-col overflow-x-hidden" x-data="{ activeTab: 'subject' }">
+
+  <!-- Navbar Placeholder (70px) -->
+  <header id="navbar-placeholder" class="fixed top-0 w-full z-[100] bg-white border-b border-slate-200 shadow-sm h-[70px]"></header>
+
+  <main class="flex-grow container mx-auto px-4 pt-28 pb-16 max-w-5xl relative">
+    
+    <!-- Header Quản Trị -->
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+      <div>
+        <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic">Hệ Thống Quản Trị</h1>
+        <p class="text-slate-500 text-sm">Quản lý nội dung và cơ sở dữ liệu học tập.</p>
+      </div>
+      <button id="logoutBtn" class="px-5 py-2 bg-red-50 text-red-600 rounded-xl text-xs font-black hover:bg-red-600 hover:text-white transition-all flex items-center gap-2 text-sharp">
+        <i class="fa-solid fa-power-off"></i> ĐĂNG XUẤT
+      </button>
+    </div>
+
+    <!-- Thanh chuyển Tab -->
+    <div class="flex p-1 bg-slate-200 rounded-2xl mb-8 max-w-md">
+      <button @click="activeTab = 'subject'" :class="activeTab === 'subject' ? 'bg-white shadow-sm text-brand' : 'text-slate-500 hover:text-slate-700'" class="flex-1 py-2.5 text-xs font-black uppercase rounded-xl transition-all">
+        Môn Học
+      </button>
+      <button @click="activeTab = 'question'" :class="activeTab === 'question' ? 'bg-white shadow-sm text-brand' : 'text-slate-500 hover:text-slate-700'" class="flex-1 py-2.5 text-xs font-black uppercase rounded-xl transition-all">
+        Quản Lý Câu Hỏi
+      </button>
+    </div>
+
+    <!-- PHẦN 1: QUẢN TRỊ MÔN HỌC -->
+    <div x-show="activeTab === 'subject'" class="space-y-6 animate-in fade-in duration-500">
+      <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm">
+        <h2 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2 uppercase tracking-wide">
+          <i class="fa-solid fa-plus-circle text-brand"></i> Thêm môn học mới
+        </h2>
+        <form id="subjectForm" class="flex flex-col sm:flex-row gap-4">
+          <input id="subjectName" type="text" class="flex-1 px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-brand/10 focus:border-brand outline-none font-bold text-sm" placeholder="Tên môn học (Ví dụ: Kỹ thuật lập trình)" required>
+          <button type="submit" class="px-8 py-3 bg-brand hover:bg-brand-light text-white font-black rounded-2xl shadow-lg shadow-brand/20 transition-all hover:-translate-y-0.5 uppercase text-xs tracking-widest">
+            Thêm Ngay
+          </button>
+        </form>
+      </div>
+
+      <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-6 bg-slate-50 border-b border-slate-200">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+            <span class="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+              Danh sách các môn học hiện có
+              <span id="subject-count-badge" class="bg-brand text-white text-[10px] font-black px-2 py-0.5 rounded-full">0</span>
+            </span>
+          </div>
+          <div class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-300 text-sm"></i>
+            <input id="subjectSearchInput" type="text" class="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none font-bold text-sm focus:ring-4 focus:ring-brand/10 transition-all" placeholder="Tìm kiếm tên môn học...">
+          </div>
+        </div>
+        <div id="subjectList" class="divide-y divide-slate-100 max-h-[500px] overflow-y-auto custom-scrollbar">
+          <!-- Render môn học -->
+        </div>
+      </div>
+    </div>
+
+    <!-- PHẦN 2: QUẢN TRỊ CÂU HỎI -->
+    <div x-show="activeTab === 'question'" x-cloak class="space-y-6 animate-in fade-in duration-500" x-data="{ qMode: 'choice' }">
+      
+      <div x-show="qMode === 'choice'" class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <button @click="qMode = 'import'" class="p-8 bg-white border border-slate-200 rounded-[2rem] shadow-sm hover:border-brand hover:bg-brand/5 transition-all text-center group">
+          <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-brand mx-auto mb-4 group-hover:scale-110 transition-transform">
+             <i class="fa-solid fa-file-import text-2xl"></i>
+          </div>
+          <span class="block text-xs font-black uppercase text-slate-700 tracking-wider">Import Moodle HTML</span>
+        </button>
+        <button @click="qMode = 'manual'" class="p-8 bg-white border border-slate-200 rounded-[2rem] shadow-sm hover:border-brand hover:bg-brand/5 transition-all text-center group">
+          <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-brand mx-auto mb-4 group-hover:scale-110 transition-transform">
+            <i class="fa-solid fa-pen-nib text-2xl text-emerald-600"></i>
+          </div>
+          <span class="block text-xs font-black uppercase text-slate-700 tracking-wider">Thêm mới thủ công</span>
+        </button>
+        <button @click="qMode = 'list'" class="p-8 bg-white border border-slate-200 rounded-[2rem] shadow-sm hover:border-brand hover:bg-brand/5 transition-all text-center group">
+          <div class="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-brand mx-auto mb-4 group-hover:scale-110 transition-transform">
+            <i class="fa-solid fa-database text-2xl text-amber-600"></i>
+          </div>
+          <span class="block text-xs font-black uppercase text-slate-700 tracking-wider">Danh sách dữ liệu</span>
+        </button>
+      </div>
+
+      <!-- Màn hình: IMPORT HTML -->
+      <div x-show="qMode === 'import'" class="bg-white p-6 sm:p-10 rounded-3xl border border-slate-200 shadow-xl relative overflow-visible animate-in slide-in-from-right-4 duration-300">
+        <div class="flex items-center gap-3 mb-8">
+          <button @click="qMode = 'choice'" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-arrow-left text-xs"></i></button>
+          <h2 class="text-lg font-black text-slate-800 uppercase italic">Import từ Moodle HTML</h2>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div class="relative" id="dropdown-import-container">
+            <label class="block text-[10px] font-black text-brand uppercase tracking-widest mb-2 ml-1">Chọn môn học để lưu</label>
+            <button id="btnImportSubject" type="button" class="w-full text-left px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-brand/10 focus:border-brand flex justify-between items-center transition-all group">
+              <span id="textImportSubject" class="text-slate-500 truncate font-bold text-sm">-- Chọn môn học --</span>
+              <i class="fa-solid fa-chevron-down text-slate-400 group-hover:text-brand transition-colors text-xs ml-2"></i>
+            </button>
+            <div id="listImportSubjectContainer" class="hidden absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col z-[110]">
+              <div class="p-3 border-b border-slate-100 bg-slate-50">
+                <input type="text" id="searchImportSubject" class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-brand" placeholder="Tìm tên môn...">
+              </div>
+              <ul id="listImportSubject" class="overflow-y-auto custom-scrollbar max-h-60 p-2 space-y-0.5"></ul>
+            </div>
+            <input type="hidden" id="valImportSubject">
+          </div>
+          <div>
+            <label class="block text-[10px] font-black text-brand uppercase tracking-widest mb-2 ml-1">Chọn file HTML/HTM</label>
+            <input type="file" id="importHtmlInput" accept=".html,.htm" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-brand/10 file:text-brand transition-all border border-slate-200 rounded-2xl bg-slate-50 cursor-pointer" disabled>
+          </div>
+        </div>
+
+        <div id="importHtmlStats" class="hidden mb-6 p-4 bg-brand/5 border border-brand/10 rounded-2xl text-xs font-bold text-brand uppercase tracking-wide"></div>
+        <div id="importHtmlResult" class="max-h-[450px] overflow-y-auto custom-scrollbar border border-slate-100 rounded-2xl p-4 bg-slate-50 mb-6 space-y-4">
+            <div class="py-12 text-center text-slate-300">
+                <i class="fa-solid fa-file-code text-4xl mb-3"></i>
+                <p class="text-sm font-bold uppercase tracking-widest">Nội dung xem trước sẽ hiện tại đây</p>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-end gap-4 border-t border-slate-100 pt-6">
+          <div class="w-full sm:w-64">
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Mã xác thực bảo mật</label>
+            <input type="password" id="questionSecurityCodeImport" class="w-full px-5 py-3 bg-white border border-slate-200 rounded-2xl outline-none font-bold text-sm focus:ring-4 focus:ring-brand/10" placeholder="Nhập mã...">
+            <div id="questionSecurityStatusImport" class="text-[10px] font-bold mt-1 ml-1 uppercase"></div>
+          </div>
+          <button id="saveImportBtn" class="w-full sm:w-auto px-10 py-3.5 bg-brand text-white font-black rounded-2xl shadow-xl hidden items-center justify-center gap-2 uppercase text-xs tracking-widest disabled:opacity-50" disabled>
+              <i class="fa-solid fa-cloud-arrow-up"></i> Lưu vào CSDL
+          </button>
+        </div>
+      </div>
+
+      <!-- Màn hình: DANH SÁCH CÂU HỎI -->
+      <div x-show="qMode === 'list'" class="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden" x-data="{ listFilterReady: false }">
+        <div class="px-8 py-8 bg-slate-50 border-b border-slate-200">
+          <div class="flex items-center gap-3 mb-6">
+            <button @click="qMode = 'choice'; listFilterReady = false" class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors"><i class="fa-solid fa-arrow-left text-xs"></i></button>
+            <h2 class="text-xl font-black text-slate-800 uppercase italic text-sharp">Kiểm soát nội dung câu hỏi</h2>
+          </div>
+
+          <div class="flex flex-col lg:flex-row gap-5 items-end">
+            <div class="relative flex-1 w-full" id="dropdown-list-container">
+              <label class="block text-[10px] font-black text-brand uppercase tracking-widest mb-2 ml-1">Lọc theo chủ đề / Môn học</label>
+              <button id="btnQuestionFilter" type="button" class="w-full text-left px-5 py-3.5 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-brand/10 flex justify-between items-center group shadow-sm transition-all outline-none">
+                <span id="textQuestionFilter" class="text-slate-500 truncate font-bold text-sm">-- Bấm để chọn môn học lọc --</span>
+                <i class="fa-solid fa-magnifying-glass text-slate-300 group-hover:text-brand transition-colors text-xs ml-2"></i>
+              </button>
+              <div id="listQuestionFilterContainer" class="hidden absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col z-[110]">
+                <div class="p-3 border-b border-slate-100 bg-slate-50">
+                  <input type="text" id="searchQuestionFilter" class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-brand shadow-inner font-medium" placeholder="Gõ tên môn để tìm nhanh...">
+                </div>
+                <ul id="listQuestionFilter" class="overflow-y-auto custom-scrollbar max-h-72 p-2 space-y-0.5"></ul>
+              </div>
+              <input type="hidden" id="valQuestionFilter">
+            </div>
+
+            <!-- Thêm nút Xóa toàn bộ môn học -->
+            <button id="deleteAllSubjectBtn" style="display: none;" class="w-full lg:w-auto px-6 py-3.5 bg-red-50 border border-red-200 text-red-600 hover:bg-red-600 hover:text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2">
+              <i class="fa-solid fa-triangle-exclamation"></i> Xóa hết môn này
+            </button>
+
+            <button @click="listFilterReady = true; fetchAllQuestions()" id="loadAllBtn" class="w-full lg:w-auto px-8 py-3.5 bg-slate-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-900 transition-all shadow-md active:scale-95">
+              TẢI TẤT CẢ
+            </button>
+            
+            <div class="flex-1 w-full">
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tìm trong kết quả</label>
+              <div class="relative">
+                <i class="fa-solid fa-keyboard absolute left-4 top-4 text-slate-300"></i>
+                <input id="questionSearchInput" type="text" class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none font-bold text-sm focus:ring-4 focus:ring-brand/10 transition-all" placeholder="Gõ từ khóa nội dung...">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="bulk-action-bar" x-show="listFilterReady" class="hidden p-5 bg-red-50 border-b border-red-100 items-center justify-between z-40 animate-in fade-in slide-in-from-top-2 duration-300">
+          <label class="flex items-center gap-3 cursor-pointer group">
+            <input type="checkbox" id="selectAllCheckbox" class="w-6 h-6 rounded-lg border-slate-300 text-red-600 focus:ring-red-500 transition-all shadow-sm">
+            <span class="text-xs font-black text-red-700 uppercase tracking-wider group-hover:text-red-900">Chọn toàn bộ danh sách hiện tại</span>
+          </label>
+          <button id="deleteSelectedBtn" class="hidden px-6 py-2.5 bg-red-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-red-200 hover:bg-red-700 transition-all active:scale-95">
+            <i class="fa-solid fa-trash-can mr-2"></i> Xóa mục đã chọn
+          </button>
+        </div>
+
+        <div id="questionListView" class="divide-y divide-slate-100 min-h-[400px] bg-white">
+           <div x-show="!listFilterReady" class="py-32 text-center text-slate-400 animate-in fade-in zoom-in">
+             <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6 opacity-50">
+                <i class="fa-solid fa-inbox text-4xl"></i>
+             </div>
+             <p class="text-sm font-bold uppercase tracking-widest max-w-xs mx-auto">Vui lòng chọn môn học hoặc nhấn "Tải tất cả" để bắt đầu làm việc.</p>
+           </div>
+        </div>
+      </div>
+
+      <!-- Màn hình: THÊM THỦ CÔNG -->
+      <div x-show="qMode === 'manual'" class="bg-white p-6 sm:p-10 rounded-3xl border border-slate-200 shadow-xl" x-cloak>
+         <div class="flex items-center gap-3 mb-8">
+          <button @click="qMode = 'choice'" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-arrow-left text-xs"></i></button>
+          <h2 class="text-lg font-black text-slate-800 uppercase italic">Thêm câu hỏi thủ công</h2>
+        </div>
+        <form id="questionForm" class="space-y-6">
+          <div class="relative w-full max-w-md" id="dropdown-manual-container">
+            <label class="block text-[10px] font-black text-brand uppercase tracking-widest mb-2 ml-1">Môn học</label>
+            <button id="btnManualSubject" type="button" class="w-full text-left px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-brand/10 focus:border-brand flex justify-between items-center transition-all group shadow-sm">
+              <span id="textManualSubject" class="text-slate-500 truncate font-bold text-sm">-- Chọn môn học --</span>
+              <i class="fa-solid fa-chevron-down text-slate-400 group-hover:text-brand transition-colors text-xs ml-2"></i>
+            </button>
+            <div id="listManualSubjectContainer" class="hidden absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col z-[110]">
+              <div class="p-3 border-b border-slate-100 bg-slate-50">
+                <input type="text" id="searchManualSubject" class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-brand font-medium" placeholder="Tìm tên môn...">
+              </div>
+              <ul id="listManualSubject" class="overflow-y-auto custom-scrollbar max-h-60 p-2 space-y-0.5"></ul>
+            </div>
+            <input type="hidden" id="valManualSubject" required>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Câu hỏi</label>
+            <textarea id="questionText" class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-brand/10 outline-none font-bold text-sm min-h-[100px]" placeholder="Nội dung... (Hỗ trợ Latex và dán ảnh)"></textarea>
+            <button type="button" class="mt-2 text-[10px] font-black text-brand hover:underline" onclick="openImageSizeEditorById('questionText')">CHỈNH CỠ ẢNH TRONG CÂU HỎI</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <template x-for="k in ['A','B','C','D']" :key="k">
+              <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1" x-text="'Đáp án ' + k"></label>
+                <div class="flex gap-2">
+                  <input :id="'answer' + k" type="text" class="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:ring-2 focus:ring-brand/10" required>
+                  <button type="button" class="px-2 text-slate-400 hover:text-brand" @click="openImageSizeEditorById('answer' + k)"><i class="fa-solid fa-image"></i></button>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end pt-4 border-t border-slate-100">
+            <div>
+              <label class="block text-[10px] font-black text-brand uppercase tracking-widest mb-2 ml-1">Đáp án đúng</label>
+              <select id="correctAnswerDropdown" class="w-full px-5 py-3 bg-brand/5 border border-brand/20 rounded-2xl font-black text-brand text-xs uppercase cursor-pointer" required>
+                <option value="">-- Chọn --</option>
+                <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1 italic">Mã bảo mật để thêm</label>
+              <input type="password" id="questionSecurityCodeManual" class="w-full px-5 py-3 bg-white border border-slate-200 rounded-2xl font-bold text-sm focus:ring-4 focus:ring-brand/10 outline-none">
+              <div id="questionSecurityStatusManual" class="text-[10px] font-bold mt-1 ml-1 uppercase"></div>
+            </div>
+          </div>
+          <button type="submit" id="submitQuestionBtn" class="w-full py-4 bg-brand text-white font-black rounded-2xl shadow-lg uppercase text-xs tracking-widest hover:-translate-y-1 transition-all">Xác nhận thêm câu hỏi</button>
+        </form>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- MODAL: SỬA CÂU HỎI -->
+  <div id="editQuestionModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 modal-overlay">
+    <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in duration-300">
+      <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <h3 class="font-black text-slate-800 uppercase italic tracking-wide text-sharp">Hiệu chỉnh câu hỏi</h3>
+        <button id="closeEditModal" class="w-10 h-10 rounded-full hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all flex items-center justify-center">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+      <div class="overflow-y-auto custom-scrollbar p-8">
+        <form id="editForm" class="space-y-6">
+          <div class="relative" id="dropdown-edit-container">
+            <label class="block text-[10px] font-black text-brand uppercase tracking-widest mb-2 ml-1">Chuyển sang môn học khác</label>
+            <button id="btnEditSubject" type="button" class="w-full text-left px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex justify-between items-center outline-none">
+              <span id="textEditSubject" class="text-brand font-black truncate text-sm">-- Chọn môn --</span>
+              <i class="fa-solid fa-chevron-down text-slate-400 text-xs"></i>
+            </button>
+            <div id="listEditSubjectContainer" class="hidden absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col z-[210]">
+              <div class="p-3 border-b border-slate-100 bg-slate-50">
+                <input type="text" id="searchEditSubject" class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-brand font-medium" placeholder="Tìm tên môn...">
+              </div>
+              <ul id="listEditSubject" class="overflow-y-auto custom-scrollbar max-h-48 p-2 space-y-0.5"></ul>
+            </div>
+            <input type="hidden" id="valEditSubject">
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nội dung câu hỏi</label>
+            <textarea id="editQuestionText" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-sm focus:ring-4 focus:ring-brand/10 min-h-[150px]" placeholder="Hỗ trợ dán ảnh (Base64) và công thức Latex"></textarea>
+            <button type="button" class="mt-2 text-[10px] font-black text-brand hover:underline" onclick="openImageSizeEditorById('editQuestionText')">CHỈNH CỠ ẢNH TRONG CÂU HỎI</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <template x-for="k in ['A','B','C','D']" :key="k">
+              <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2" x-text="'Lựa chọn ' + k"></label>
+                <div class="flex gap-2">
+                  <textarea :id="'editAnswer' + k" class="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:ring-2 focus:ring-brand/10 min-h-[80px] shadow-inner"></textarea>
+                  <button type="button" class="px-2 text-slate-400 hover:text-brand" @click="openImageSizeEditorById('editAnswer' + k)"><i class="fa-solid fa-image"></i></button>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end pt-4 border-t border-slate-100">
+            <div>
+              <label class="block text-[10px] font-black text-brand uppercase tracking-widest mb-2 ml-1">Kết quả chuẩn xác</label>
+              <select id="editCorrectAnswerDropdown" class="w-full px-5 py-3 bg-brand/5 border border-brand/20 rounded-2xl font-black text-brand text-xs uppercase cursor-pointer" required>
+                <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1 italic">Cần mã bảo mật để lưu thay đổi</label>
+              <input type="password" id="questionSecurityCodeEdit" class="w-full px-5 py-3 bg-white border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-brand/10" placeholder="••••••••">
+              <div id="questionSecurityStatusEdit" class="text-[10px] font-black mt-1 ml-1 uppercase"></div>
+            </div>
+          </div>
+          <button type="submit" class="w-full py-4 bg-brand text-white font-black rounded-2xl shadow-xl shadow-brand/20 uppercase text-xs tracking-widest hover:-translate-y-1 active:scale-95 transition-all">Ghi lại thay đổi</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CHỈNH CỠ ẢNH -->
+  <div id="imageSizeModal" class="fixed inset-0 z-[300] hidden items-center justify-center p-4 modal-overlay">
+    <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+      <div class="px-8 py-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+        <h3 class="font-black text-slate-800 text-sm uppercase tracking-widest text-sharp">Chỉnh kích thước ảnh</h3>
+        <div class="flex gap-2">
+          <button id="imageSizeApplyBtn" class="px-4 py-2 bg-brand text-white text-[10px] font-black rounded-lg uppercase tracking-wider hover:bg-brand-light transition-all">Áp dụng</button>
+          <button id="imageSizeCloseBtn" class="px-4 py-2 bg-slate-200 text-slate-600 text-[10px] font-black rounded-lg uppercase tracking-wider hover:bg-slate-300 transition-all">Đóng</button>
+        </div>
+      </div>
+      <div id="imageSizeList" class="overflow-y-auto custom-scrollbar p-6 space-y-4"></div>
+      <div class="p-6 bg-slate-50 border-t border-slate-100 text-[10px] text-slate-500 font-bold uppercase italic text-center">
+        Mẹo: Nhập giá trị kèm đơn vị (VD: 300px hoặc 100%). Bỏ trống để xóa kích thước.
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDoc, getDocs, updateDoc, deleteDoc, doc, query, where, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+    // ==== FIREBASE CONFIG ====
+    const firebaseConfig = {
+      apiKey: "AIzaSyAjBMA-atKKvecY8CWeQXZsIQ3yHckZ92M",
+      authDomain: "tracuu-d3ee9.firebaseapp.com",
+      projectId: "tracuu-d3ee9",
+      storageBucket: "tracuu-d3ee9.appspot.com",
+      messagingSenderId: "593568604435",
+      appId: "1:593568604435:web:9a5145457a8ee734143ae6",
+      measurementId: "G-R0M6Y502NP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // Kiểm soát quyền truy cập
+    onAuthStateChanged(auth, (user) => { 
+      if (!user) {
+        window.location.replace("ad.login.html");
+      }
+    });
+
+    document.getElementById("logoutBtn").onclick = () => {
+      signOut(auth).then(() => window.location.replace("ad.login.html"));
+    };
+
+    // Cache và Refs
+    const subjectList = document.getElementById("subjectList");
+    const questionListView = document.getElementById("questionListView");
+    const bulkBar = document.getElementById("bulk-action-bar");
+    const deleteBtn = document.getElementById("deleteSelectedBtn");
+    const deleteAllSubBtn = document.getElementById("deleteAllSubjectBtn");
+    const subjectSearchInput = document.getElementById("subjectSearchInput");
+    
+    let allSubjects = [];
+    let allQuestionsRaw = [];
+    let importedQuestions = [];
+
+    // Security Logic
+    async function checkSecurity(code) {
+      const snap = await getDoc(doc(db, "config", "security_code"));
+      return snap.exists() && snap.data().code === code.trim();
+    }
+
+    function initSecurityUI(inputId, statusId, btnId) {
+       const inp = document.getElementById(inputId), stat = document.getElementById(statusId), btn = document.getElementById(btnId);
+       if(!inp) return;
+       inp.oninput = async () => {
+         const val = inp.value.trim();
+         if(!val) { stat.innerHTML = ''; return; }
+         stat.textContent = 'ĐANG KIỂM TRA...';
+         const ok = await checkSecurity(val);
+         stat.innerHTML = ok ? '<span class="text-emerald-500 font-bold">MÃ HỢP LỆ ✅</span>' : '<span class="text-red-500 font-bold">MÃ KHÔNG ĐÚNG ❌</span>';
+         if(btn && inputId === 'questionSecurityCodeImport') btn.disabled = !ok;
+       }
+    }
+    initSecurityUI('questionSecurityCodeImport', 'questionSecurityStatusImport', 'saveImportBtn');
+    initSecurityUI('questionSecurityCodeManual', 'questionSecurityStatusManual');
+    initSecurityUI('questionSecurityCodeEdit', 'questionSecurityStatusEdit');
+
+    // Searchable Dropdown Helper
+    function initSearchableDropdown(btnId, containerId, listId, searchId, textId, hiddenId, subjects, callback) {
+      const btn = document.getElementById(btnId), container = document.getElementById(containerId), list = document.getElementById(listId);
+      const search = document.getElementById(searchId), text = document.getElementById(textId), hidden = document.getElementById(hiddenId);
+      if(!btn) return;
+      const render = (items) => {
+        list.innerHTML = items.length ? '' : '<li class="p-4 text-center text-slate-400 text-xs italic font-medium">Không tìm thấy kết quả</li>';
+        items.forEach(s => {
+          const li = document.createElement('li');
+          li.className = 'px-4 py-3 text-sm font-bold text-slate-700 hover:bg-brand/5 hover:text-brand rounded-xl cursor-pointer transition-all border-b border-slate-50 last:border-0';
+          li.textContent = s.name;
+          li.onclick = () => {
+            hidden.value = s.id; 
+            hidden.dispatchEvent(new Event('change'));
+            text.textContent = s.name; 
+            text.className = 'text-brand font-black truncate text-sm sm:text-base uppercase tracking-tight';
+            container.classList.add('hidden');
+            if (callback) callback(s.id);
+          };
+          list.appendChild(li);
+        });
+      };
+      btn.onclick = (e) => { 
+        e.stopPropagation(); 
+        const isOpen = !container.classList.contains('hidden');
+        document.querySelectorAll('[id$="Container"]').forEach(c => c.classList.add('hidden')); 
+        if(!isOpen) {
+          container.classList.remove('hidden');
+          search.focus();
+        }
+      };
+      search.oninput = () => render(subjects.filter(s => s.name.toLowerCase().includes(search.value.toLowerCase())));
+      document.addEventListener('click', (e) => { if(!btn.contains(e.target) && !container.contains(e.target)) container.classList.add('hidden'); });
+      render(subjects);
+    }
+
+    // SUBJECTS CRUD
+    async function refreshSubjects() {
+      const snap = await getDocs(collection(db, "mon_hoc"));
+      allSubjects = snap.docs.map(d => ({ id: d.id, name: d.data().ten_mon || d.id }));
+      allSubjects.sort((a,b) => a.name.localeCompare(b.name, 'vi'));
+      
+      renderSubjectItems(allSubjects);
+
+      initSearchableDropdown('btnQuestionFilter', 'listQuestionFilterContainer', 'listQuestionFilter', 'searchQuestionFilter', 'textQuestionFilter', 'valQuestionFilter', allSubjects, (id) => {
+          const scope = Alpine.$data(document.querySelector('[x-data]'));
+          if(scope) scope.listFilterReady = true;
+          
+          // Khi chọn 1 môn học, hiện nút Xóa Toàn Bộ Môn Này
+          deleteAllSubBtn.style.display = 'inline-flex';
+          deleteAllSubBtn.dataset.subjectId = id;
+          
+          fetchAndRenderQuestions(id);
+      });
+      initSearchableDropdown('btnEditSubject', 'listEditSubjectContainer', 'listEditSubject', 'searchEditSubject', 'textEditSubject', 'valEditSubject', allSubjects);
+      initSearchableDropdown('btnManualSubject', 'listManualSubjectContainer', 'listManualSubject', 'searchManualSubject', 'textManualSubject', 'valManualSubject', allSubjects);
+      initSearchableDropdown('btnImportSubject', 'listImportSubjectContainer', 'listImportSubject', 'searchImportSubject', 'textImportSubject', 'valImportSubject', allSubjects, async (id) => {
+          document.getElementById('importHtmlInput').disabled = false;
+          window.currentSubjectQuestions = await loadQuestionsForSubject(id);
+      });
+    }
+
+    // Ẩn nút "Xóa Toàn Bộ" khi bấm "TẢI TẤT CẢ"
+    document.getElementById("loadAllBtn").addEventListener("click", () => {
+       deleteAllSubBtn.style.display = 'none';
+       document.getElementById("textQuestionFilter").textContent = '-- Đang xem tất cả --';
+       document.getElementById("textQuestionFilter").className = 'text-slate-500 truncate font-bold text-sm';
+       document.getElementById("valQuestionFilter").value = '';
+    });
+
+    // LOGIC: Xóa toàn bộ câu hỏi của môn học
+    deleteAllSubBtn.onclick = async function() {
+       const subId = this.dataset.subjectId;
+       if(!subId) return;
+       const subName = allSubjects.find(s => s.id === subId)?.name || 'môn này';
+       
+       if(confirm(`CẢNH BÁO: Bạn chuẩn bị XÓA VĨNH VIỄN TOÀN BỘ câu hỏi của môn "${subName}"?\nHành động này không thể hoàn tác!`)) {
+         const code = prompt("Nhập mã bảo mật Admin để xác nhận xóa toàn bộ:");
+         if(!code) return;
+         
+         const ok = await checkSecurity(code);
+         if(!ok) return alert("Mã bảo mật không chính xác. Hủy thao tác xóa!");
+         
+         const q = query(collection(db, "cau_hoi"), where("mon_hoc_id", "==", subId));
+         const snap = await getDocs(q);
+         if(snap.empty) return alert("Môn học này hiện chưa có câu hỏi nào để xóa.");
+         
+         const b = writeBatch(db);
+         snap.forEach(d => b.delete(doc(db, "cau_hoi", d.id)));
+         await b.commit();
+         
+         alert(`Thành công! Đã xóa sạch ${snap.size} câu hỏi của môn "${subName}".`);
+         allQuestionsRaw = [];
+         renderQuestions([]);
+       }
+    };
+
+    function renderSubjectItems(itemsToRender) {
+      document.getElementById('subject-count-badge').textContent = itemsToRender.length;
+      subjectList.innerHTML = itemsToRender.length ? '' : '<div class="p-16 text-center text-slate-400 font-bold uppercase tracking-widest italic">Không tìm thấy môn học nào</div>';
+      
+      itemsToRender.forEach(s => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between p-5 hover:bg-slate-50 transition-all group border-l-4 border-transparent hover:border-brand';
+        row.innerHTML = `
+          <span class="font-black text-slate-700 text-sm tracking-tight">${s.name}</span>
+          <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-2 group-hover:translate-x-0 transition-transform">
+            <button class="edit-sub text-emerald-600 hover:bg-emerald-50 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors">Sửa</button>
+            <button class="del-sub text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors">Xóa</button>
+          </div>
+        `;
+        row.querySelector('.edit-sub').onclick = async () => {
+          const n = prompt("Nhập tên môn học mới:", s.name);
+          if(n && n.trim() !== s.name) {
+            await updateDoc(doc(db, "mon_hoc", s.id), { ten_mon: n.trim() });
+            refreshSubjects();
+          }
+        };
+        row.querySelector('.del-sub').onclick = async () => {
+          if(confirm(`Xác nhận xóa môn "${s.name}"? TẤT CẢ câu hỏi thuộc môn này sẽ bị xóa vĩnh viễn khỏi CSDL!`)) {
+            const b = writeBatch(db);
+            const qs = await getDocs(query(collection(db, "cau_hoi"), where("mon_hoc_id", "==", s.id)));
+            qs.forEach(d => b.delete(doc(db, "cau_hoi", d.id)));
+            b.delete(doc(db, "mon_hoc", s.id));
+            await b.commit();
+            refreshSubjects();
+          }
+        };
+        subjectList.appendChild(row);
+      });
+    }
+
+    subjectSearchInput.oninput = () => {
+      const query = subjectSearchInput.value.toLowerCase().trim();
+      const filtered = allSubjects.filter(s => s.name.toLowerCase().includes(query));
+      renderSubjectItems(filtered);
+    };
+
+    document.getElementById("subjectForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const n = document.getElementById("subjectName").value.trim();
+      await addDoc(collection(db, "mon_hoc"), { ten_mon: n });
+      document.getElementById("subjectName").value = '';
+      refreshSubjects();
+    };
+
+    // QUESTIONS LOGIC
+    window.fetchAllQuestions = async () => {
+      questionListView.innerHTML = '<div class="py-32 text-center"><i class="fa-solid fa-spinner fa-spin text-brand text-4xl mb-4"></i><p class="text-xs font-black text-brand uppercase tracking-widest animate-pulse">Đang nạp toàn bộ dữ liệu...</p></div>';
+      const snap = await getDocs(collection(db, "cau_hoi"));
+      allQuestionsRaw = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderQuestions(allQuestionsRaw);
+    };
+
+    async function fetchAndRenderQuestions(monHocId) {
+      questionListView.innerHTML = '<div class="py-32 text-center"><i class="fa-solid fa-circle-notch fa-spin text-brand text-4xl mb-4"></i><p class="text-xs font-black text-brand uppercase tracking-widest animate-pulse">Đang trích xuất dữ liệu môn học...</p></div>';
+      const q = query(collection(db, "cau_hoi"), where("mon_hoc_id", "==", monHocId));
+      const snap = await getDocs(q);
+      allQuestionsRaw = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderQuestions(allQuestionsRaw);
+    }
+
+    function renderQuestions(items) {
+      const search = document.getElementById("questionSearchInput").value.toLowerCase();
+      let filtered = items;
+      if(search) filtered = items.filter(q => q.noi_dung.toLowerCase().includes(search));
+
+      questionListView.innerHTML = filtered.length ? '' : '<div class="py-24 text-center text-slate-300 font-black uppercase italic tracking-widest">Không có dữ liệu phù hợp</div>';
+      bulkBar.classList.toggle('hidden', filtered.length === 0);
+      bulkBar.classList.toggle('flex', filtered.length > 0);
+      
+      // Reset Select All
+      document.getElementById("selectAllCheckbox").checked = false;
+      deleteBtn.classList.add('hidden');
+      deleteBtn.classList.remove('inline-flex');
+
+      filtered.forEach(q => {
+        const subName = allSubjects.find(s => s.id === q.mon_hoc_id)?.name || 'Không xác định';
+        const card = document.createElement('div');
+        card.className = 'p-6 sm:p-8 hover:bg-brand/5 transition-all group relative border-l-4 border-transparent hover:border-brand';
+        card.innerHTML = `
+          <div class="flex items-start gap-5">
+             <input type="checkbox" class="question-checkbox mt-2 w-5 h-5 rounded border-slate-300 text-brand focus:ring-brand shadow-sm transition-all" data-id="${q.id}">
+             <div class="flex-1">
+               <div class="flex flex-wrap items-center gap-2 mb-3">
+                 <span class="px-2.5 py-1 bg-brand text-white rounded-md text-[9px] font-black uppercase tracking-wider">${subName}</span>
+                 <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest bg-slate-100 px-2.5 py-1 rounded-md">ID: ${q.id}</span>
+               </div>
+               <h4 class="font-bold text-slate-900 leading-relaxed mathjax-content mb-5 text-base sm:text-lg break-words-custom">${q.noi_dung}</h4>
+               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-4 border-l-2 border-slate-200 mb-6">
+                 ${['a','b','c','d'].map(k => `
+                    <div class="text-sm break-words-custom ${q.dap_an_dung === k ? 'text-emerald-600 font-black' : 'text-slate-500 font-medium'} flex items-start gap-2">
+                       <span class="uppercase flex-shrink-0 w-5 h-5 flex items-center justify-center rounded bg-slate-100 text-[10px] font-black">${k}</span>
+                       <span class="mathjax-content">${q.lua_chon?.[k] || ''}</span>
+                    </div>`).join('')}
+               </div>
+               <div class="flex gap-6 mt-4 border-t border-slate-100 pt-4">
+                 <button class="edit-q text-indigo-600 text-[10px] font-black uppercase tracking-widest hover:text-indigo-800 transition-colors flex items-center gap-1"><i class="fa-solid fa-edit"></i> Chỉnh sửa</button>
+                 <button class="del-q text-red-500 text-[10px] font-black uppercase tracking-widest hover:text-red-700 transition-colors flex items-center gap-1"><i class="fa-solid fa-trash"></i> Xóa bỏ</button>
+               </div>
+             </div>
+          </div>
+        `;
+        card.querySelector('.edit-q').onclick = () => showEditModal(q);
+        card.querySelector('.del-q').onclick = async () => {
+          if(confirm('Bạn chắc chắn muốn xóa vĩnh viễn câu hỏi này không?')) {
+            await deleteDoc(doc(db, "cau_hoi", q.id));
+            filtered = filtered.filter(x => x.id !== q.id);
+            allQuestionsRaw = allQuestionsRaw.filter(x => x.id !== q.id);
+            renderQuestions(filtered);
+          }
+        };
+        questionListView.appendChild(card);
+      });
+      if(window.MathJax?.typesetPromise) window.MathJax.typesetPromise();
+    }
+
+    // ==== MOODLE IMPORT LOGIC (Đã khôi phục render đỏ xanh chuẩn xác) ====
+    let imagesFoundCount = 0;
+    function extractTextAndLaTeX(node) {
+      let result = "";
+      if (!node) return result;
+      node.childNodes.forEach(child => {
+        if (child.nodeType === Node.TEXT_NODE) {
+          result += child.textContent;
+        } else if (child.nodeType === Node.ELEMENT_NODE) {
+          if (child.tagName === "SCRIPT" && child.type && child.type.startsWith("math/tex")) {
+            result += `\\(${child.textContent.trim()}\\)`;
+          } else if (child.tagName === "SPAN" && (child.classList.contains("MathJax_Preview") || child.classList.contains("MathJax"))) {
+            return;
+          } else if (child.tagName === "IMG" && child.src) { 
+            imagesFoundCount++; result += ` [HÌNH ẢNH] `; 
+          } else {
+            result += extractTextAndLaTeX(child);
+          }
+        }
+      });
+      return result.replace(/\s+/g, " ").trim();
+    }
+
+    const norm = (s) => (s || "").replace(/\\\(|\\\)|\[HÌNH ẢNH\]|<.*?>|[\s\r\n]+/g, " ").trim().toLowerCase();
+    function isDuplicateInSet(question, existSet) {
+      const c1 = norm(question.noi_dung);
+      const a1 = ["a","b","c","d"].map(k => norm(question.lua_chon?.[k])).sort();
+      const cor1 = norm(question.lua_chon?.[question.dap_an_dung]);
+      for (const q of existSet) {
+        if (c1 !== norm(q.noi_dung)) continue;
+        const a2 = ["a","b","c","d"].map(k => norm(q.lua_chon?.[k])).sort();
+        if (a1.length === a2.length && a1.every((v, i) => v === a2[i]) && cor1 === norm(q.lua_chon?.[q.dap_an_dung])) return true;
+      }
+      return false;
+    }
+
+    async function loadQuestionsForSubject(id) {
+       const q = query(collection(db, "cau_hoi"), where("mon_hoc_id", "==", id));
+       const snap = await getDocs(q);
+       return snap.docs.map(d => d.data());
+    }
+
+    document.getElementById("importHtmlInput").onchange = function(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const monHocId = document.getElementById("valImportSubject").value;
+      if (!monHocId) return alert("Vui lòng chọn môn học!");
+
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        imagesFoundCount = 0;
+        const docx = new DOMParser().parseFromString(ev.target.result, "text/html");
+        let raw = [];
+        
+        docx.querySelectorAll(".que").forEach(qEl => {
+          let qtext = extractTextAndLaTeX(qEl.querySelector(".qtext"));
+          const ansNodes = Array.from(qEl.querySelectorAll(".answer > div"));
+          const answers = ansNodes.map(n => extractTextAndLaTeX(n.querySelector(".flex-fill, div.ml-1, .specificfeedback") || n));
+          
+          let correctIdx = -1;
+          const match = (qEl.querySelector(".rightanswer")?.innerText || "").match(/(?:The correct answer is:|Câu trả lời đúng là:)\s*(.+)$/);
+          if (match) {
+            const correctValue = match[1].trim();
+            correctIdx = answers.findIndex(a => norm(a) === norm(correctValue));
+          }
+          if (correctIdx === -1) {
+            correctIdx = ansNodes.findIndex(n => n.classList.contains("correct"));
+          }
+          
+          if (qtext && answers.length >= 2 && correctIdx !== -1) {
+            raw.push({ questionText: qtext, answers, correctIdx, correctKey: ["a","b","c","d"][correctIdx], lua_chon: { a: answers[0]||"", b: answers[1]||"", c: answers[2]||"", d: answers[3]||"" } });
+          }
+        });
+
+        const existSet = [...(window.currentSubjectQuestions || [])];
+        importedQuestions = raw.map(q => {
+          const dup = isDuplicateInSet({ noi_dung: q.questionText, dap_an_dung: q.correctKey, lua_chon: q.lua_chon }, existSet);
+          if(!dup) existSet.push({ noi_dung: q.questionText, dap_an_dung: q.correctKey, lua_chon: q.lua_chon });
+          return { ...q, duplicate: dup };
+        });
+
+        const stats = document.getElementById("importHtmlStats");
+        stats.classList.remove('hidden');
+        stats.innerHTML = `Tổng: <b>${importedQuestions.length}</b> | Hình: <b>${imagesFoundCount}</b> | Trùng: <b class="text-red-500">${importedQuestions.filter(x=>x.duplicate).length}</b>`;
+
+        document.getElementById("importHtmlResult").innerHTML = importedQuestions.map((q, idx) => {
+          // Bổ sung vòng lặp in các đáp án A, B, C, D
+          let answersHtml = q.answers.map((a, ansIdx) => {
+            const isCorrect = ansIdx === q.correctIdx;
+            const textClass = isCorrect ? 'text-emerald-600 font-bold' : 'text-slate-600';
+            const icon = isCorrect ? '<i class="fa-solid fa-circle-check ml-2"></i><span class="text-xs ml-1 italic">(Đáp án đúng)</span>' : '';
+            return `<div class="ml-4 mt-2 text-sm ${textClass}">${String.fromCharCode(97+ansIdx)}. <span class="mathjax-content break-words-custom">${a}</span> ${icon}</div>`;
+          }).join('');
+
+          return `
+          <div class="p-5 rounded-xl border border-slate-200 ${q.duplicate ? 'bg-red-50' : 'bg-white shadow-sm'}">
+            <p class="font-black text-slate-800 text-sm mb-2 text-sharp break-words-custom">Câu ${idx+1}: <span class="mathjax-content">${q.questionText}</span></p>
+            ${answersHtml}
+            ${q.duplicate ? '<p class="text-[10px] font-black text-red-500 uppercase tracking-widest mt-4 pt-3 border-t border-red-200"><i class="fa-solid fa-circle-info"></i> Câu hỏi đã tồn tại, sẽ không được lưu</p>' : ''}
+          </div>`;
+        }).join('');
+        
+        if (window.MathJax?.typesetPromise) MathJax.typesetPromise();
+        document.getElementById("saveImportBtn").classList.remove('hidden');
+        document.getElementById("saveImportBtn").classList.add('flex');
+      };
+      reader.readAsText(file);
+    };
+
+    document.getElementById("saveImportBtn").onclick = async function() {
+      const list = importedQuestions.filter(q => !q.duplicate);
+      if(!list.length) return alert("Không có câu hỏi mới!");
+      this.disabled = true; this.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang lưu...';
+      const monHocId = document.getElementById("valImportSubject").value;
+      const code = document.getElementById("questionSecurityCodeImport").value;
+      let ok = 0;
+      for (const q of list) {
+        try { 
+            await addDoc(collection(db, "cau_hoi"), { 
+                mon_hoc_id: monHocId, 
+                noi_dung: q.questionText, 
+                noi_dung_img: "", 
+                lua_chon: q.lua_chon, 
+                dap_an_dung: q.correctKey, 
+                security_code: code 
+            }); 
+            ok++; 
+        } catch(e) {}
+      }
+      alert(`Đã lưu thành công ${ok} câu hỏi mới!`); 
+      window.location.reload();
+    };
+
+    document.getElementById("questionSearchInput").oninput = () => renderQuestions(allQuestionsRaw);
+
+    let currentEditQ = null;
+    function showEditModal(q) {
+      currentEditQ = q;
+      document.getElementById("valEditSubject").value = q.mon_hoc_id;
+      document.getElementById("textEditSubject").textContent = allSubjects.find(s => s.id === q.mon_hoc_id)?.name || 'Môn học';
+      document.getElementById("editQuestionText").value = q.noi_dung;
+      ['a','b','c','d'].forEach(k => document.getElementById("editAnswer"+k.toUpperCase()).value = q.lua_chon?.[k] || '');
+      document.getElementById("editCorrectAnswerDropdown").value = q.dap_an_dung;
+      document.getElementById("editQuestionModal").classList.remove('hidden');
+      document.getElementById("editQuestionModal").classList.add('flex');
+    }
+    document.getElementById("closeEditModal").onclick = () => document.getElementById("editQuestionModal").classList.add('hidden');
+
+    document.getElementById("editForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const code = document.getElementById("questionSecurityCodeEdit").value;
+      if(!(await checkSecurity(code))) return alert("Mã bảo mật hệ thống không chính xác!");
+      
+      const payload = {
+        mon_hoc_id: document.getElementById("valEditSubject").value,
+        noi_dung: document.getElementById("editQuestionText").value.trim(),
+        lua_chon: {
+          a: document.getElementById("editAnswerA").value.trim(),
+          b: document.getElementById("editAnswerB").value.trim(),
+          c: document.getElementById("editAnswerC").value.trim(),
+          d: document.getElementById("editAnswerD").value.trim()
+        },
+        dap_an_dung: document.getElementById("editCorrectAnswerDropdown").value,
+        security_code: code,
+        updated_at: new Date().toISOString()
+      };
+      await updateDoc(doc(db, "cau_hoi", currentEditQ.id), payload);
+      alert("Đã cập nhật dữ liệu thành công!");
+      document.getElementById("editQuestionModal").classList.add('hidden');
+      allQuestionsRaw = allQuestionsRaw.map(x => x.id === currentEditQ.id ? { id: x.id, ...payload } : x);
+      renderQuestions(allQuestionsRaw);
+    };
+
+    // LOGIC: Checkbox chọn nhiều & Xóa mục đã chọn
+    document.getElementById("selectAllCheckbox").onchange = (e) => {
+      const isChecked = e.target.checked;
+      document.querySelectorAll('.question-checkbox').forEach(cb => cb.checked = isChecked);
+      if (isChecked) {
+        deleteBtn.classList.remove('hidden');
+        deleteBtn.classList.add('inline-flex');
+      } else {
+        deleteBtn.classList.add('hidden');
+        deleteBtn.classList.remove('inline-flex');
+      }
+    };
+
+    questionListView.onclick = (e) => {
+      if(e.target.classList.contains('question-checkbox')) {
+        const checked = !!document.querySelector('.question-checkbox:checked');
+        if (checked) {
+          deleteBtn.classList.remove('hidden');
+          deleteBtn.classList.add('inline-flex');
+        } else {
+          deleteBtn.classList.add('hidden');
+          deleteBtn.classList.remove('inline-flex');
+        }
+      }
+    };
+
+    deleteBtn.onclick = async () => {
+      const ids = Array.from(document.querySelectorAll('.question-checkbox:checked')).map(cb => cb.dataset.id);
+      if(!confirm(`Bạn đang yêu cầu xóa ${ids.length} câu hỏi? Thao tác này không thể hoàn tác!`)) return;
+      
+      const code = prompt("Nhập mã bảo mật để xác nhận xóa:");
+      if(!code) return;
+      const ok = await checkSecurity(code);
+      if(!ok) return alert("Mã bảo mật sai!");
+
+      const b = writeBatch(db);
+      ids.forEach(id => b.delete(doc(db, "cau_hoi", id)));
+      await b.commit();
+      
+      allQuestionsRaw = allQuestionsRaw.filter(q => !ids.includes(q.id));
+      renderQuestions(allQuestionsRaw);
+      deleteBtn.classList.add('hidden');
+      document.getElementById("selectAllCheckbox").checked = false;
+      alert(`Đã xóa thành công ${ids.length} câu hỏi.`);
+    };
+
+    function bindPaste(el) {
+       if (!el) return; 
+       el.addEventListener('paste', async (e) => {
+         const file = Array.from(e.clipboardData.items).find(x => x.type.startsWith('image/'))?.getAsFile();
+         if(!file) return;
+         e.preventDefault();
+         const reader = new FileReader();
+         reader.onload = (ev) => {
+           const tag = `<img src="${ev.target.result}" style="max-width:100%;height:auto;border-radius:8px;margin:10px 0;">`;
+           const start = el.selectionStart, end = el.selectionEnd;
+           el.value = el.value.slice(0, start) + tag + el.value.slice(end);
+         };
+         reader.readAsDataURL(file);
+       });
+    }
+
+    window.openImageSizeEditorById = (id) => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      const tmp = document.createElement('div');
+      tmp.innerHTML = el.value;
+      const imgs = Array.from(tmp.querySelectorAll('img'));
+      const list = document.getElementById("imageSizeList");
+      list.innerHTML = imgs.length ? '' : '<div class="py-10 text-center font-bold text-slate-400 uppercase">Không tìm thấy ảnh trong nội dung</div>';
+      
+      imgs.forEach((img, idx) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100';
+        row.innerHTML = `
+          <img src="${img.src}" class="w-20 h-20 object-contain rounded-lg border bg-white">
+          <div class="flex-1 grid grid-cols-2 gap-2">
+             <div class="space-y-1">
+               <span class="text-[9px] font-black text-slate-400 uppercase ml-1">Chiều rộng</span>
+               <input type="text" placeholder="300px" value="${img.style.width || ''}" class="w-full px-3 py-1.5 border rounded-lg text-xs font-bold focus:ring-2 focus:ring-brand/20 outline-none" data-idx="${idx}" data-type="w">
+             </div>
+             <div class="space-y-1">
+               <span class="text-[9px] font-black text-slate-400 uppercase ml-1">Chiều cao</span>
+               <input type="text" placeholder="auto" value="${img.style.height || ''}" class="w-full px-3 py-1.5 border rounded-lg text-xs font-bold focus:ring-2 focus:ring-brand/20 outline-none" data-idx="${idx}" data-type="h">
+             </div>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+      
+      document.getElementById("imageSizeModal").classList.remove('hidden');
+      document.getElementById("imageSizeModal").classList.add('flex');
+      
+      document.getElementById("imageSizeApplyBtn").onclick = () => {
+        const inputs = Array.from(list.querySelectorAll('input'));
+        inputs.forEach(inp => {
+          const i = imgs[inp.dataset.idx];
+          if(inp.dataset.type === 'w') i.style.width = inp.value || '';
+          else i.style.height = inp.value || '';
+        });
+        el.value = tmp.innerHTML;
+        document.getElementById("imageSizeModal").classList.add('hidden');
+        document.getElementById("imageSizeModal").classList.remove('flex');
+      };
+    };
+    document.getElementById("imageSizeCloseBtn").onclick = () => {
+      document.getElementById("imageSizeModal").classList.add('hidden');
+      document.getElementById("imageSizeModal").classList.remove('flex');
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      refreshSubjects();
+      fetch('/menu.html')
+        .then(r => r.ok ? r.text() : "")
+        .then(h => { if(h) document.getElementById('navbar-placeholder').innerHTML = h; });
+
+      ['questionText','editQuestionText','editAnswerA','editAnswerB','editAnswerC','editAnswerD','answerA','answerB','answerC','answerD'].forEach(id => bindPaste(document.getElementById(id)));
+    });
+  </script>
+</body>
+</html>

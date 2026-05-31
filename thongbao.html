@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Tin Trung Tâm | Hệ Thống Tra Cứu</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Cấu hình màu thương hiệu #005625 -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                DEFAULT: '#005625',
+                light: '#007030', 
+                dark: '#003d1a',
+                soft: '#f8faf9',
+              }
+            },
+            fontFamily: {
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    
+    <!-- Google Font & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- QuillJS CSS (Chỉ giữ lại styling cho nội dung Rich Text) -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Ghi đè Quill để hiển thị đẹp hơn trong chế độ đọc */
+        .ql-editor { padding: 0; border: none; line-height: 1.75; font-size: 1rem; color: #374151; }
+        .ql-editor h1, .ql-editor h2, .ql-editor h3 { color: #111827; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: 600; }
+        .ql-editor p { margin-bottom: 1em; }
+        .ql-editor a { color: #005625; text-decoration: none; transition: all 0.2s; font-weight: 500; }
+        .ql-editor a:hover { color: #007030; text-decoration: underline; }
+        .ql-editor img { border-radius: 0.5rem; max-width: 100%; height: auto; }
+
+        /* Tùy chỉnh thanh cuộn cho Modal */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Ẩn thanh cuộn cho thanh bộ lọc trên Mobile */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Hiệu ứng xuất hiện cho Card */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
+        
+        .text-sharp { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col overflow-x-hidden">
+
+    <!-- ✅ Header / Navbar -->
+    <header id="navbar-placeholder" class="fixed top-0 w-full z-50 bg-white border-b border-slate-200 shadow-sm transition-all h-[70px]"></header>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12 max-w-6xl">
+        
+        <!-- Hero Section & Online Counter -->
+        <div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight uppercase italic text-sharp">Bảng Tin Trung Tâm</h1>
+                <p class="text-slate-500 mt-2 text-sm sm:text-base font-medium">Cập nhật những thông báo và sự kiện mới nhất từ hệ thống.</p>
+            </div>
+            
+            <!-- Bộ đếm người online chuẩn theo phong cách các trang khác -->
+            <div class="inline-flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-sm text-xs font-bold text-slate-600 transition-all">
+                <span class="relative flex h-2.5 w-2.5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <span>Hệ thống: <span id="online-counter" class="text-brand text-sm ml-0.5">0</span> người trực tuyến</span>
+            </div>
+        </div>
+
+        <!-- ✅ Bộ lọc danh mục (Được tạo động từ Firestore) -->
+        <div class="mb-8 flex overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 gap-3 hide-scrollbar" id="category-filters">
+            <!-- Nút Tất cả (Mặc định) -->
+            <button data-filter="all" class="filter-btn whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-bold transition-all bg-brand text-white shadow-md shadow-brand/20">
+                Tất cả
+            </button>
+            <!-- Các danh mục khác sẽ được load vào đây -->
+        </div>
+
+        <!-- Grid Thông báo -->
+        <div id="announcements-grid" class="grid gap-6 md:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            <!-- Trạng thái Loading -->
+            <div id="loading-state" class="col-span-full flex flex-col items-center justify-center py-24 text-slate-400">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-brand mb-4"></i>
+                <p class="font-bold text-xs uppercase tracking-widest text-slate-500">Đang tải dữ liệu bảng tin...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-auto">
+        <div class="container mx-auto px-6 py-6 text-center text-slate-400 font-medium text-xs tracking-wider uppercase">
+            <p>&copy; 2026 Hệ thống Tra cứu TVU. Mọi quyền được bảo lưu.</p>
+        </div>
+    </footer>
+
+    <!-- ✅ Modal Chi Tiết Thông Báo -->
+    <div id="announcement-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 sm:p-6" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <!-- Backdrop -->
+        <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0 duration-300"></div>
+
+        <!-- Modal Panel -->
+        <div id="modal-panel" class="relative bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col transform scale-95 opacity-0 transition-all duration-300 border border-slate-200">
+            
+            <!-- Modal Header -->
+            <div class="flex items-start justify-between p-6 sm:p-8 border-b border-slate-100 bg-slate-50/50 rounded-t-3xl z-10 sticky top-0">
+                <div class="pr-8">
+                    <div class="flex flex-wrap items-center gap-3 mb-3">
+                        <span id="modal-category" class="text-[10px] font-black px-2.5 py-1 rounded-md tracking-widest uppercase border shadow-sm"></span>
+                        <span class="text-xs text-slate-400 font-bold uppercase tracking-widest" id="modal-date"></span>
+                    </div>
+                    <h2 id="modal-title" class="text-2xl sm:text-3xl font-black text-slate-900 leading-tight tracking-tight text-sharp"></h2>
+                </div>
+                
+                <div class="flex items-center gap-2 absolute top-6 right-6">
+                    <!-- Nút Copy -->
+                    <button id="copy-link-btn" class="p-2.5 text-slate-400 hover:text-brand hover:bg-brand/10 rounded-full transition-colors group relative" title="Sao chép liên kết">
+                        <i class="fa-solid fa-link w-5 h-5 flex items-center justify-center text-lg"></i>
+                        <span id="copy-tooltip" class="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white font-bold text-[10px] uppercase tracking-widest py-1.5 px-3 rounded-lg opacity-0 transition-opacity whitespace-nowrap pointer-events-none shadow-lg">Đã sao chép</span>
+                    </button>
+                    <!-- Nút Close -->
+                    <button id="modal-close-btn" class="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors">
+                        <i class="fa-solid fa-xmark w-6 h-6 flex items-center justify-center text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body (Nội dung) -->
+            <div class="p-6 sm:p-8 overflow-y-auto">
+                <div id="modal-body" class="ql-editor font-medium text-slate-700"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ Logic Điều Khiển Giao Diện -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, query, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getDatabase, ref, push, onValue, onDisconnect, set } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        // ==========================================
+        // 1. CẤU HÌNH & KHỞI TẠO FIREBASE
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjBMA-atKKvecY8CWeQXZsIQ3yHckZ92M", 
+            authDomain: "tracuu-d3ee9.firebaseapp.com",
+            databaseURL: "https://tracuu-d3ee9-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "tracuu-d3ee9",
+            storageBucket: "tracuu-d3ee9.appspot.com",
+            messagingSenderId: "593568604435",
+            appId: "1:593568604435:web:9a5145457a8ee734143ae6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const rtdb = getDatabase(app, firebaseConfig.databaseURL);
+
+        // ==========================================
+        // 2. TRẠNG THÁI & TIỆN ÍCH (STATE & UTILS)
+        // ==========================================
+        const State = {
+            announcements: new Map(),
+            categories: [],
+            activeId: null,
+            currentFilter: 'all'
+        };
+
+        const Utils = {
+            getCategoryStyles(category) {
+                const styles = {
+                    'Quan Trọng': { border: 'border-red-500', badge: 'bg-red-50 text-red-600 border-red-200' },
+                    'Lịch Học':   { border: 'border-blue-500', badge: 'bg-blue-50 text-blue-600 border-blue-200' },
+                    'Sự Kiện':    { border: 'border-amber-500', badge: 'bg-amber-50 text-amber-600 border-amber-200' },
+                    'Tin Tức':    { border: 'border-purple-500', badge: 'bg-purple-50 text-purple-600 border-purple-200' },
+                    'Thông Tin Chung': { border: 'border-sky-500', badge: 'bg-sky-50 text-sky-600 border-sky-200' }
+                };
+                return styles[category] || { border: 'border-slate-400', badge: 'bg-slate-50 text-slate-600 border-slate-200' };
+            },
+            formatDate(timestamp) {
+                if (!timestamp) return 'Đang cập nhật';
+                return timestamp.toDate().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
+        };
+
+        // ==========================================
+        // 3. XỬ LÝ GIAO DIỆN (UI RENDER)
+        // ==========================================
+        const ViewCtrl = {
+            grid: document.getElementById('announcements-grid'),
+            filtersContainer: document.getElementById('category-filters'),
+            
+            renderFilters() {
+                this.filtersContainer.innerHTML = '';
+
+                const btnAll = document.createElement('button');
+                btnAll.className = State.currentFilter === 'all' 
+                    ? 'filter-btn whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-bold transition-all bg-brand text-white shadow-md shadow-brand/20'
+                    : 'filter-btn whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-bold transition-all bg-white text-slate-500 border border-slate-200 hover:bg-slate-100 hover:text-slate-800';
+                btnAll.dataset.filter = 'all';
+                btnAll.textContent = 'Tất cả';
+                this.filtersContainer.appendChild(btnAll);
+
+                State.categories.forEach(cat => {
+                    const btn = document.createElement('button');
+                    btn.className = State.currentFilter === cat.name 
+                        ? 'filter-btn whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-bold transition-all bg-brand text-white shadow-md shadow-brand/20'
+                        : 'filter-btn whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-bold transition-all bg-white text-slate-500 border border-slate-200 hover:bg-slate-100 hover:text-slate-800';
+                    btn.dataset.filter = cat.name;
+                    btn.textContent = cat.name;
+                    this.filtersContainer.appendChild(btn);
+                });
+
+                this.filtersContainer.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        State.currentFilter = e.target.dataset.filter;
+                        this.renderFilters(); 
+                        this.renderGrid();    
+                    });
+                });
+            },
+
+            renderGrid() {
+                this.grid.innerHTML = '';
+                let index = 0;
+                let hasVisibleCards = false;
+                
+                if (State.announcements.size === 0) {
+                    this.showEmptyState("Hệ thống hiện chưa có thông báo nào.");
+                    return;
+                }
+
+                State.announcements.forEach((data, id) => {
+                    if (State.currentFilter === 'all' || data.category === State.currentFilter) {
+                        this.grid.appendChild(this.createCardElement(id, data, index));
+                        index++;
+                        hasVisibleCards = true;
+                    }
+                });
+
+                if (!hasVisibleCards) {
+                    this.showEmptyState(`Không có thông báo nào thuộc danh mục "${State.currentFilter}".`);
+                }
+            },
+
+            showEmptyState(message) {
+                this.grid.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 text-slate-500 bg-white rounded-3xl border border-dashed border-slate-300">
+                        <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                            <i class="fa-regular fa-folder-open text-4xl text-slate-300"></i>
+                        </div>
+                        <p class="text-sm font-bold uppercase tracking-widest">${message}</p>
+                    </div>`;
+            },
+
+            createCardElement(docId, data, index) {
+                const styles = Utils.getCategoryStyles(data.category);
+                const dateStr = Utils.formatDate(data.createdAt);
+                
+                const article = document.createElement('article');
+                article.className = `group bg-white rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-slate-200 flex flex-col animate-fade-in-up hover:-translate-y-1 cursor-pointer`;
+                article.style.animationDelay = `${index * 0.05}s`; 
+                article.dataset.id = docId;
+
+                article.innerHTML = `
+                    <div class="h-1.5 w-full ${styles.border.replace('border-', 'bg-')}"></div>
+                    <div class="p-6 sm:p-8 flex flex-col flex-grow relative">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="${styles.badge} px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded border">${data.category || 'Khác'}</span>
+                        </div>
+                        <h2 class="text-lg sm:text-xl font-black text-slate-900 mb-3 group-hover:text-brand transition-colors line-clamp-2 leading-snug">${data.title}</h2>
+                        
+                        <div class="relative max-h-24 overflow-hidden mb-6 flex-grow">
+                            <div class="text-slate-500 text-sm leading-relaxed ql-editor !p-0 font-medium">${data.content}</div>
+                            <div class="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-white to-transparent"></div>
+                        </div>
+                        
+                        <div class="pt-4 border-t border-slate-100 mt-auto flex items-center justify-between">
+                            <time class="text-xs text-slate-400 font-bold tracking-widest uppercase"><i class="fa-regular fa-clock mr-1"></i> ${dateStr}</time>
+                            <span class="inline-flex items-center text-xs font-black uppercase tracking-widest text-brand group-hover:text-brand-light transition-colors">
+                                Chi tiết
+                                <i class="fa-solid fa-arrow-right ml-1.5 transform group-hover:translate-x-1 transition-transform"></i>
+                            </span>
+                        </div>
+                    </div>
+                `;
+
+                article.addEventListener('click', () => ModalCtrl.open(docId));
+                return article;
+            }
+        };
+
+        // ==========================================
+        // 4. QUẢN LÝ MODAL (MODAL CONTROLLER)
+        // ==========================================
+        const ModalCtrl = {
+            el: document.getElementById('announcement-modal'),
+            backdrop: document.getElementById('modal-backdrop'),
+            panel: document.getElementById('modal-panel'),
+            title: document.getElementById('modal-title'),
+            category: document.getElementById('modal-category'),
+            date: document.getElementById('modal-date'),
+            body: document.getElementById('modal-body'),
+
+            open(id) {
+                const data = State.announcements.get(id);
+                if (!data) return;
+
+                State.activeId = id;
+                this.title.textContent = data.title;
+                this.body.innerHTML = data.content;
+                this.date.innerHTML = `<i class="fa-regular fa-calendar mr-1"></i> ${Utils.formatDate(data.createdAt)}`;
+                
+                const styles = Utils.getCategoryStyles(data.category);
+                this.category.className = `${styles.badge} text-[10px] font-black px-2.5 py-1 rounded border shadow-sm tracking-widest uppercase`;
+                this.category.textContent = data.category || 'Khác';
+
+                this.el.classList.remove('hidden');
+                this.el.classList.add('flex');
+                void this.el.offsetWidth; 
+
+                this.backdrop.classList.remove('opacity-0');
+                this.panel.classList.remove('opacity-0', 'scale-95', 'translate-y-4');
+                this.panel.classList.add('opacity-100', 'scale-100', 'translate-y-0');
+                
+                document.body.style.overflow = 'hidden';
+                history.replaceState(null, '', `${location.pathname}?id=${id}`);
+            },
+
+            close() {
+                this.backdrop.classList.add('opacity-0');
+                this.panel.classList.remove('opacity-100', 'scale-100', 'translate-y-0');
+                this.panel.classList.add('opacity-0', 'scale-95', 'translate-y-4');
+
+                setTimeout(() => {
+                    this.el.classList.add('hidden');
+                    this.el.classList.remove('flex');
+                    this.body.innerHTML = '';
+                    document.body.style.overflow = '';
+                }, 300);
+
+                State.activeId = null;
+                history.replaceState(null, '', `${location.pathname}`);
+            }
+        };
+
+        document.getElementById('modal-close-btn').addEventListener('click', () => ModalCtrl.close());
+        document.getElementById('modal-backdrop').addEventListener('click', () => ModalCtrl.close());
+
+        document.getElementById('copy-link-btn').addEventListener('click', () => {
+            if (State.activeId) {
+                const link = `${location.origin}${location.pathname}?id=${State.activeId}`;
+                navigator.clipboard.writeText(link).then(() => {
+                    const tooltip = document.getElementById('copy-tooltip');
+                    tooltip.classList.remove('opacity-0');
+                    setTimeout(() => tooltip.classList.add('opacity-0'), 2000);
+                });
+            }
+        });
+
+        // ==========================================
+        // 5. KHỞI CHẠY DỮ LIỆU (DATA CONTROLLER)
+        // ==========================================
+        const DataCtrl = {
+            init() {
+                try {
+                    const qCat = query(collection(db, 'categories'), orderBy('createdAt', 'asc'));
+                    onSnapshot(qCat, (snapshot) => {
+                        State.categories = [];
+                        snapshot.forEach(doc => {
+                            State.categories.push({ id: doc.id, ...doc.data() });
+                        });
+                        ViewCtrl.renderFilters();
+                    }, (error) => console.error("Lỗi lấy danh mục:", error));
+                } catch (e) { console.error("Filter init error", e); }
+
+                try {
+                    const qAnnounce = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'));
+                    onSnapshot(qAnnounce, (snapshot) => {
+                        State.announcements.clear();
+                        snapshot.forEach(doc => {
+                            State.announcements.set(doc.id, doc.data());
+                        });
+                        
+                        ViewCtrl.renderGrid();
+
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const openId = urlParams.get('id');
+                        if (openId && State.announcements.has(openId) && !State.activeId) {
+                            setTimeout(() => ModalCtrl.open(openId), 300);
+                        }
+                    }, (error) => {
+                        ViewCtrl.grid.innerHTML = `<div class="col-span-full text-center py-10 text-red-500 font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Lỗi kết nối hệ thống. Vui lòng thử lại sau.</div>`;
+                    });
+                } catch (e) { console.error("Grid init error", e); }
+
+                try {
+                    // Logic đếm người online đã được fix chuẩn theo thư viện Firebase
+                    const onlineCounterEl = document.getElementById('online-counter');
+                    if (onlineCounterEl) {
+                        const connectionsRef = ref(rtdb, 'connections');
+                        const connectedRef = ref(rtdb, '.info/connected');
+
+                        onValue(connectedRef, (snap) => {
+                            if (snap.val() === true) {
+                                const myConnectionRef = push(connectionsRef);
+                                onDisconnect(myConnectionRef).remove();
+                                set(myConnectionRef, true);
+                            }
+                        });
+
+                        onValue(connectionsRef, (snapshot) => {
+                            const val = snapshot.val();
+                            onlineCounterEl.textContent = val ? Object.keys(val).length : 0;
+                        });
+                    }
+                } catch (e) { console.error("Counter init error", e); }
+            }
+        };
+
+        // ==========================================
+        // 6. KHỞI ĐỘNG
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            DataCtrl.init();
+
+            fetch('./menu_tailwind.html')
+                .then(r => r.ok ? r.text() : "")
+                .then(html => {
+                    if(html) document.getElementById('navbar-placeholder').innerHTML = html;
+                })
+                .catch(err => console.log("Bỏ qua nạp navbar:", err));
+        });
+    </script>
+</body>
+</html>

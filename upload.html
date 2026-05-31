@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <title>Cập Nhật Dữ Liệu | Hệ Thống Tra Cứu</title>
+  <!-- Chống zoom tuyệt đối trên iOS -->
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" name="viewport"/>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Cấu hình màu thương hiệu #005625 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#005625',
+              light: '#007030', 
+              dark: '#003d1a',
+              soft: '#f8faf9',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- MathJax -->
+  <script async id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background-color: #f1f5f9; 
+      -webkit-font-smoothing: antialiased;
+    }
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+    .mathjax-content { font-size: 1.05em; line-height: 1.6; }
+    .text-sharp { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+    .break-words-custom { word-wrap: break-word; overflow-wrap: break-word; word-break: break-word; }
+  </style>
+</head>
+<body class="text-slate-900 min-h-screen flex flex-col overflow-x-hidden">
+
+  <!-- Navbar Placeholder -->
+  <header id="navbar-placeholder" class="fixed top-0 w-full z-[100] bg-white border-b border-slate-200 shadow-sm h-[70px]"></header>
+
+  <main class="flex-grow container mx-auto px-4 pt-24 sm:pt-28 pb-16 max-w-5xl relative">
+    
+    <!-- Online Counter Pill -->
+    <div class="mb-6 sm:mb-8 flex justify-center">
+      <div class="inline-flex items-center gap-2 bg-white border border-slate-200 px-4 py-1.5 rounded-full shadow-sm text-[10px] sm:text-[12px] font-bold text-slate-600">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        Hệ thống: <span id="online-counter" class="text-brand">0</span> đang online
+      </div>
+    </div>
+
+    <!-- Header Section -->
+    <div class="text-center mb-8 sm:mb-10">
+      <h1 class="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight mb-2 uppercase text-sharp italic">Quản Lý Dữ Liệu</h1>
+      <p class="text-slate-500 text-sm sm:text-base font-medium italic underline underline-offset-4 decoration-brand/30">Hệ thống nạp câu hỏi trắc nghiệm</p>
+    </div>
+
+    <!-- Main Card -->
+    <div class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xl overflow-visible p-4 sm:p-8">
+      
+      <!-- Giao diện Chọn Phương Thức (Câu Hỏi) -->
+      <div id="mode-choice" class="flex flex-col items-center py-4 sm:py-8 animate-in fade-in duration-500">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full max-w-2xl">
+          <button onclick="switchQMode('import')" class="flex flex-col items-center gap-3 sm:gap-4 p-6 sm:p-8 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl sm:rounded-3xl hover:border-brand hover:bg-brand/5 transition-all group">
+            <div class="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-xl sm:rounded-2xl shadow-sm flex items-center justify-center text-brand text-xl sm:text-2xl group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-file-code"></i>
+            </div>
+            <div class="text-center">
+              <span class="block font-black text-slate-800 uppercase tracking-wide text-xs sm:text-sm">Nhập file HTML Moodle</span>
+              <span class="text-[10px] sm:text-xs text-slate-500 italic">Trích xuất nhanh từ bài kiểm tra</span>
+            </div>
+          </button>
+
+          <button onclick="switchQMode('manual')" class="flex flex-col items-center gap-3 sm:gap-4 p-6 sm:p-8 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl sm:rounded-3xl hover:border-brand hover:bg-brand/5 transition-all group">
+            <div class="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-xl sm:rounded-2xl shadow-sm flex items-center justify-center text-emerald-600 text-xl sm:text-2xl group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-keyboard"></i>
+            </div>
+            <div class="text-center">
+              <span class="block font-black text-slate-800 uppercase tracking-wide text-xs sm:text-sm">Thêm Câu Hỏi Thủ Công</span>
+              <span class="text-[10px] sm:text-xs text-slate-500 italic">Nhập nội dung & Tải ảnh đáp án</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Giao diện NHẬP HTML MOODLE -->
+      <div id="mode-import" style="display: none;" class="animate-in slide-in-from-right-4 duration-300">
+        <div class="flex items-center gap-3 mb-6 sm:mb-8">
+          <button onclick="switchQMode('choice')" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors">
+            <i class="fa-solid fa-arrow-left text-sm"></i>
+          </button>
+          <h2 class="text-lg sm:text-xl font-black text-slate-800 uppercase italic">Trích xuất từ HTML</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+           <div class="relative z-20" id="dropdown-import-container">
+             <label class="block text-[10px] font-black text-brand uppercase tracking-widest mb-2 ml-1">1. Chọn môn học đích</label>
+             <button id="btnImportSubject" type="button" class="w-full text-left px-4 sm:px-5 py-3.5 sm:py-3.5 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl focus:bg-white focus:ring-4 focus:ring-brand/10 focus:border-brand flex justify-between items-center transition-all group shadow-sm">
+               <span id="textImportSubject" class="text-slate-500 truncate font-bold text-sm">-- Bấm chọn môn --</span>
+               <i class="fa-solid fa-chevron-down text-slate-400 group-hover:text-brand transition-colors text-xs ml-2"></i>
+             </button>
+             <div id="listImportSubjectContainer" class="hidden absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col z-[110]">
+               <div class="p-3 border-b border-slate-100 bg-slate-50">
+                 <input type="text" id="searchImportSubject" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-base sm:text-sm outline-none focus:border-brand shadow-inner font-medium" placeholder="Tìm tên môn...">
+               </div>
+               <div id="listImportSubject" class="overflow-y-auto custom-scrollbar max-h-60 p-2 space-y-1"></div>
+             </div>
+             <input type="hidden" id="valImportSubject">
+           </div>
+
+           <div>
+             <label class="block text-[10px] font-black text-brand uppercase tracking-widest mb-2 ml-1">2. Chọn file HTML</label>
+             <input type="file" id="importHtmlInput" accept=".html,.htm,text/html,*/*" class="block w-full text-xs sm:text-sm text-slate-500 file:mr-3 sm:file:mr-4 file:py-2.5 sm:file:py-3 file:px-4 sm:file:px-6 file:rounded-lg sm:file:rounded-xl file:border-0 file:text-[10px] sm:file:text-xs file:font-black file:bg-brand/10 file:text-brand transition-all border border-slate-200 rounded-xl sm:rounded-2xl bg-slate-50 cursor-pointer shadow-sm disabled:opacity-50" disabled>
+           </div>
+        </div>
+
+        <!-- Bảng thống kê -->
+        <div id="importHtmlStats" class="hidden mb-6 p-4 sm:p-5 bg-brand/5 border border-brand/20 rounded-xl sm:rounded-2xl text-sm sm:text-base font-bold text-brand shadow-inner"></div>
+
+        <div id="importHtmlResult" class="max-h-[300px] sm:max-h-[400px] overflow-y-auto custom-scrollbar border border-slate-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 bg-slate-50/50 space-y-4 mb-8">
+          <div class="py-12 text-center text-slate-300 font-bold uppercase tracking-widest text-xs sm:text-sm">Xem trước dữ liệu tại đây</div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-4 border-t border-slate-100 pt-8">
+          <div class="flex-grow">
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Mã bảo mật hệ thống</label>
+            <input type="password" id="questionSecurityCodeImport" class="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-brand/10 focus:border-brand outline-none font-bold text-base sm:text-sm shadow-sm" placeholder="••••••••">
+            <div id="questionSecurityCodeStatusImport" class="text-[10px] font-black mt-1 ml-1 uppercase"></div>
+          </div>
+          <button id="saveImportBtn" class="px-8 py-4 sm:py-3.5 bg-brand hover:bg-brand-light text-white font-black rounded-xl sm:rounded-2xl shadow-xl shadow-brand/20 transition-all hover:-translate-y-1 active:translate-y-0 hidden items-center justify-center gap-2 uppercase text-[11px] sm:text-xs tracking-widest disabled:opacity-50" disabled>
+            <i class="fa-solid fa-cloud-arrow-up"></i> LƯU DỮ LIỆU
+          </button>
+        </div>
+      </div>
+
+      <!-- Giao diện THÊM THỦ CÔNG -->
+      <div id="mode-manual" style="display: none;" class="animate-in slide-in-from-left-4 duration-300">
+        <div class="flex items-center gap-3 mb-6 sm:mb-8">
+          <button onclick="switchQMode('choice')" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors">
+            <i class="fa-solid fa-arrow-left text-sm"></i>
+          </button>
+          <h2 class="text-lg sm:text-xl font-black text-slate-800 uppercase italic">Thêm thủ công</h2>
+        </div>
+
+        <form id="manualQuestionForm" autocomplete="off" class="space-y-6">
+          <div class="relative w-full max-w-md z-20" id="dropdown-manual-container">
+             <label class="block text-[10px] font-black text-brand uppercase tracking-widest mb-2 ml-1">Môn học áp dụng <span class="text-red-500">*</span></label>
+             <button id="btnManualSubject" type="button" class="w-full text-left px-4 sm:px-5 py-3.5 sm:py-3.5 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl focus:bg-white focus:ring-4 focus:ring-brand/10 focus:border-brand flex justify-between items-center transition-all group shadow-sm">
+               <span id="textManualSubject" class="text-slate-500 truncate font-bold text-sm">-- Chọn môn học --</span>
+               <i class="fa-solid fa-chevron-down text-slate-400 group-hover:text-brand transition-colors text-xs ml-2"></i>
+             </button>
+             <div id="listManualSubjectContainer" class="hidden absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col z-[110]">
+               <div class="p-3 border-b border-slate-100 bg-slate-50">
+                 <input type="text" id="searchManualSubject" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-base sm:text-sm outline-none focus:border-brand shadow-inner font-medium" placeholder="Tìm tên môn...">
+               </div>
+               <div id="listManualSubject" class="overflow-y-auto custom-scrollbar max-h-60 p-2 space-y-1"></div>
+             </div>
+             <input type="hidden" id="valManualSubject" required>
+          </div>
+
+          <!-- Nội dung Câu hỏi -->
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nội dung câu hỏi <span class="text-red-500">*</span></label>
+            <textarea id="manualQuestionText" class="w-full px-4 sm:px-5 py-3 sm:py-4 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl focus:bg-white focus:ring-4 focus:ring-brand/10 focus:border-brand outline-none font-bold text-base min-h-[100px] sm:min-h-[120px] shadow-inner" placeholder="Nhập câu hỏi (Hỗ trợ Latex)" required></textarea>
+            
+            <div class="mt-3 flex flex-wrap items-center gap-3 sm:gap-4">
+              <label class="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200 transition-colors text-[10px] font-black text-slate-600 border border-slate-200">
+                <i class="fa-solid fa-image"></i> Tải ảnh câu hỏi
+                <input type="file" id="manualQuestionImageInput" accept="image/*" class="hidden">
+              </label>
+              <img id="manualQuestionImgPreview" class="h-8 rounded border hidden" />
+              <button type="button" id="manualRemoveQuestionImgBtn" class="text-red-500 hidden"><i class="fa-solid fa-circle-xmark"></i></button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <!-- Đáp án A -->
+             <div class="p-4 border border-slate-200 rounded-xl bg-white shadow-sm">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1" for="manualAnswerA">Đáp án A</label>
+                <input id="manualAnswerA" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand/10 outline-none font-bold text-base sm:text-sm mb-2" placeholder="Nội dung đáp án a" required>
+                <div class="flex items-center gap-2">
+                    <label class="text-[10px] font-bold text-slate-500 cursor-pointer hover:text-brand bg-slate-100 px-2 py-1 rounded border">
+                        <i class="fa-solid fa-paperclip"></i> Ảnh
+                        <input type="file" id="manualAnswerAImgInput" accept="image/*" class="hidden">
+                    </label>
+                    <img id="manualAnswerAImgPreview" class="h-6 rounded border hidden"/>
+                    <button type="button" id="manualRemoveAImgBtn" class="text-red-500 hidden text-xs"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+             </div>
+             <!-- Đáp án B -->
+             <div class="p-4 border border-slate-200 rounded-xl bg-white shadow-sm">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1" for="manualAnswerB">Đáp án B</label>
+                <input id="manualAnswerB" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand/10 outline-none font-bold text-base sm:text-sm mb-2" placeholder="Nội dung đáp án b" required>
+                <div class="flex items-center gap-2">
+                    <label class="text-[10px] font-bold text-slate-500 cursor-pointer hover:text-brand bg-slate-100 px-2 py-1 rounded border">
+                        <i class="fa-solid fa-paperclip"></i> Ảnh
+                        <input type="file" id="manualAnswerBImgInput" accept="image/*" class="hidden">
+                    </label>
+                    <img id="manualAnswerBImgPreview" class="h-6 rounded border hidden"/>
+                    <button type="button" id="manualRemoveBImgBtn" class="text-red-500 hidden text-xs"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+             </div>
+             <!-- Đáp án C -->
+             <div class="p-4 border border-slate-200 rounded-xl bg-white shadow-sm">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1" for="manualAnswerC">Đáp án C</label>
+                <input id="manualAnswerC" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand/10 outline-none font-bold text-base sm:text-sm mb-2" placeholder="Nội dung đáp án c" required>
+                <div class="flex items-center gap-2">
+                    <label class="text-[10px] font-bold text-slate-500 cursor-pointer hover:text-brand bg-slate-100 px-2 py-1 rounded border">
+                        <i class="fa-solid fa-paperclip"></i> Ảnh
+                        <input type="file" id="manualAnswerCImgInput" accept="image/*" class="hidden">
+                    </label>
+                    <img id="manualAnswerCImgPreview" class="h-6 rounded border hidden"/>
+                    <button type="button" id="manualRemoveCImgBtn" class="text-red-500 hidden text-xs"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+             </div>
+             <!-- Đáp án D -->
+             <div class="p-4 border border-slate-200 rounded-xl bg-white shadow-sm">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1" for="manualAnswerD">Đáp án D</label>
+                <input id="manualAnswerD" type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand/10 outline-none font-bold text-base sm:text-sm mb-2" placeholder="Nội dung đáp án d" required>
+                <div class="flex items-center gap-2">
+                    <label class="text-[10px] font-bold text-slate-500 cursor-pointer hover:text-brand bg-slate-100 px-2 py-1 rounded border">
+                        <i class="fa-solid fa-paperclip"></i> Ảnh
+                        <input type="file" id="manualAnswerDImgInput" accept="image/*" class="hidden">
+                    </label>
+                    <img id="manualAnswerDImgPreview" class="h-6 rounded border hidden"/>
+                    <button type="button" id="manualRemoveDImgBtn" class="text-red-500 hidden text-xs"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+             </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 items-end pt-4 border-t border-slate-100">
+            <div>
+              <label class="block text-[10px] font-black text-brand uppercase tracking-widest mb-2 ml-1">Kết quả đúng <span class="text-red-500">*</span></label>
+              <select id="manualCorrectAnswerDropdown" class="w-full px-4 sm:px-5 py-3.5 bg-brand/5 border border-brand/20 rounded-xl sm:rounded-2xl font-black text-brand text-base sm:text-sm uppercase outline-none focus:ring-4 focus:ring-brand/10 cursor-pointer shadow-sm" required>
+                <option value="">-- Chọn đáp án đúng --</option>
+                <option value="a">Phương án A</option>
+                <option value="b">Phương án B</option>
+                <option value="c">Phương án C</option>
+                <option value="d">Phương án D</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1 italic">Mã bảo mật</label>
+              <input type="password" id="questionSecurityCodeManual" class="w-full px-4 sm:px-5 py-3.5 bg-white border border-slate-200 rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-brand/10 focus:border-brand outline-none font-bold text-base sm:text-sm shadow-sm" placeholder="••••••••">
+              <div id="questionSecurityCodeStatusManual" class="text-[10px] font-black mt-1 ml-1 uppercase"></div>
+            </div>
+          </div>
+          <button type="submit" id="manualSubmitQuestionBtn" class="w-full py-4 bg-brand hover:bg-brand-light text-white font-black rounded-xl sm:rounded-2xl shadow-xl shadow-brand/20 transition-all disabled:opacity-50 disabled:pointer-events-none uppercase text-[11px] sm:text-xs tracking-widest" disabled>
+            LƯU CÂU HỎI VÀO HỆ THỐNG
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where, getDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getDatabase, ref, onValue, onDisconnect, set, push } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+    // ==== CHUYỂN ĐỔI CHẾ ĐỘ CÂU HỎI (HTML vs Manual) ====
+    window.switchQMode = function(mode) {
+      document.getElementById('mode-choice').style.display = mode === 'choice' ? 'flex' : 'none';
+      document.getElementById('mode-import').style.display = mode === 'import' ? 'block' : 'none';
+      document.getElementById('mode-manual').style.display = mode === 'manual' ? 'block' : 'none';
+    };
+
+    // ==== FIREBASE CONFIG ====
+    const firebaseConfig = {
+      apiKey: "AIzaSyAjBMA-atKKvecY8CWeQXZsIQ3yHckZ92M",
+      authDomain: "tracuu-d3ee9.firebaseapp.com",
+      projectId: "tracuu-d3ee9",
+      storageBucket: "tracuu-d3ee9.appspot.com",
+      messagingSenderId: "593568604435",
+      appId: "1:593568604435:web:9a5145457a8ee734143ae6",
+      measurementId: "G-R0M6Y502NP"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const rtdb = getDatabase(app, "https://tracuu-d3ee9-default-rtdb.asia-southeast1.firebasedatabase.app");
+
+    // ONLINE COUNTER
+    const onlineCounterEl = document.getElementById('online-counter');
+    const connectionsRef = ref(rtdb, 'connections');
+    const myConnectionRef = push(connectionsRef);
+    onDisconnect(myConnectionRef).remove();
+    set(myConnectionRef, true);
+    onValue(connectionsRef, (snapshot) => {
+      onlineCounterEl.textContent = snapshot.exists() ? Object.keys(snapshot.val()).length : 0;
+    });
+
+    // SEARCHABLE DROPDOWN
+    function initSearchableDropdown(btnId, containerId, listId, searchId, textId, hiddenId, subjects, callback) {
+      const btn = document.getElementById(btnId), container = document.getElementById(containerId), list = document.getElementById(listId);
+      const search = document.getElementById(searchId), text = document.getElementById(textId), hidden = document.getElementById(hiddenId);
+      if(!btn) return;
+      
+      const render = (items) => {
+        list.innerHTML = items.length ? '' : '<div class="p-4 text-center text-slate-400 text-xs italic font-medium">Không tìm thấy</div>';
+        items.forEach(s => {
+          const btnItem = document.createElement('button');
+          btnItem.type = 'button';
+          btnItem.className = 'block w-full text-left px-4 py-3.5 sm:py-2.5 text-sm font-bold text-slate-700 hover:bg-brand/5 hover:text-brand rounded-lg transition-all cursor-pointer active:bg-brand/10 border-b border-slate-50';
+          btnItem.textContent = s.name;
+          
+          btnItem.onclick = (e) => {
+            e.preventDefault();
+            hidden.value = s.id; 
+            hidden.dispatchEvent(new Event('change'));
+            text.textContent = s.name; 
+            text.className = 'text-brand font-black truncate text-sm uppercase tracking-tight';
+            container.classList.add('hidden');
+            if (callback) callback(s.id);
+          };
+          list.appendChild(btnItem);
+        });
+      };
+      
+      btn.addEventListener('click', (e) => { 
+        e.preventDefault();
+        e.stopPropagation(); 
+        const isOpen = !container.classList.contains('hidden');
+        document.querySelectorAll('[id$="Container"]').forEach(c => c.classList.add('hidden'));
+        if(!isOpen) { 
+          container.classList.remove('hidden'); 
+          if (window.innerWidth > 768) search.focus(); 
+        }
+      });
+      
+      search.oninput = () => render(subjects.filter(s => s.name.toLowerCase().includes(search.value.toLowerCase())));
+      
+      document.addEventListener('click', (e) => { 
+        if(!btn.contains(e.target) && !container.contains(e.target)) {
+          container.classList.add('hidden'); 
+        }
+      });
+      render(subjects);
+    }
+
+    // LOAD SUBJECTS
+    let allSubjects = [];
+    async function getSubjects() {
+      try {
+        const snap = await getDocs(collection(db, "mon_hoc"));
+        allSubjects = snap.docs.map(d => ({ id: d.id, name: d.data().ten_mon || d.id }));
+        allSubjects.sort((a,b) => a.name.localeCompare(b.name, 'vi'));
+        
+        initSearchableDropdown('btnImportSubject', 'listImportSubjectContainer', 'listImportSubject', 'searchImportSubject', 'textImportSubject', 'valImportSubject', allSubjects, async (id) => {
+          document.getElementById('importHtmlInput').disabled = false;
+          window.currentSubjectQuestions = await loadQuestionsForSubject(id);
+        });
+        
+        initSearchableDropdown('btnManualSubject', 'listManualSubjectContainer', 'listManualSubject', 'searchManualSubject', 'textManualSubject', 'valManualSubject', allSubjects);
+      } catch (err) { console.error(err); }
+    }
+    getSubjects();
+
+    async function loadQuestionsForSubject(id) {
+      const q = query(collection(db, "cau_hoi"), where("mon_hoc_id", "==", id));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => d.data());
+    }
+
+    // UTILS
+    const normalizeCompareString = (str) => {
+      return (str || "")
+        .replace(/\\\(|\\\)|\[HÌNH ẢNH\]/g, "")
+        .replace(/<.*?>/g, "")
+        .replace(/[\s\r\n]+/g, " ")
+        .trim()
+        .toLowerCase();
+    };
+
+    const getNormalizedAnswers = (lua_chon) => {
+      return ['a','b','c','d'].map(k => normalizeCompareString(lua_chon?.[k])).filter(x => x);
+    };
+
+    function isDuplicateInSet(question, existSet) {
+      const content = normalizeCompareString(question.noi_dung);
+      const answers = getNormalizedAnswers(question.lua_chon).sort();
+      const correctContent = normalizeCompareString(question.lua_chon?.[question.dap_an_dung]);
+      
+      for (const q of existSet) {
+        const qContent = normalizeCompareString(q.noi_dung);
+        const qAnswers = getNormalizedAnswers(q.lua_chon).sort();
+        const qCorrectContent = normalizeCompareString(q.lua_chon?.[q.dap_an_dung]);
+        
+        if (content !== qContent) continue;
+        if (answers.length !== qAnswers.length) continue;
+        let allAnswersMatch = answers.every((val, index) => val === qAnswers[index]);
+        if (!allAnswersMatch) continue;
+        if (correctContent === qCorrectContent) return true;
+      }
+      return false;
+    }
+
+    // SECURITY CHECK
+    function setupSecurityCheck(inputId, statusId, btnId) {
+      const input = document.getElementById(inputId);
+      const status = document.getElementById(statusId);
+      const btn = document.getElementById(btnId);
+      input.addEventListener('input', async () => {
+        const val = input.value.trim();
+        status.textContent = val ? "Đang kiểm tra..." : "";
+        if(btn) btn.disabled = true;
+        if (!val) return;
+        try {
+          const snap = await getDoc(doc(db, "config", "security_code"));
+          if (snap.exists() && snap.data().code === val) {
+            status.innerHTML = '<span class="text-emerald-500 font-bold">MÃ HỢP LỆ ✅</span>';
+            if (btn && btnId === 'saveImportBtn' && importedQuestions.length > 0) btn.disabled = false;
+            if (btn && btnId === 'manualSubmitQuestionBtn') btn.disabled = false;
+          } else {
+            status.innerHTML = '<span class="text-red-500 font-bold">MÃ SAI ❌</span>';
+          }
+        } catch (err) {
+          status.innerHTML = '<span class="text-red-500">Lỗi kết nối mã!</span>';
+        }
+      });
+    }
+    setupSecurityCheck('questionSecurityCodeImport', 'questionSecurityCodeStatusImport', 'saveImportBtn');
+    setupSecurityCheck('questionSecurityCodeManual', 'questionSecurityCodeStatusManual', 'manualSubmitQuestionBtn');
+
+    // MOODLE IMPORT
+    let importedQuestions = [];
+    let imagesFoundCount = 0;
+
+    function extractTextAndLaTeX(node) {
+      let result = "";
+      if (!node) return result;
+      node.childNodes.forEach(child => {
+        if (child.nodeType === Node.TEXT_NODE) {
+          result += child.textContent;
+        } else if (child.nodeType === Node.ELEMENT_NODE) {
+          if (child.tagName === "SCRIPT" && child.type && child.type.startsWith("math/tex")) {
+            result += `\\(${child.textContent.trim()}\\)`;
+          } else if (child.tagName === "SPAN" && (child.classList.contains("MathJax_Preview") || child.classList.contains("MathJax"))) {
+            // Bỏ qua thẻ preview
+          } else if (child.tagName === "IMG" && child.src) {
+            imagesFoundCount++;
+            result += ` [HÌNH ẢNH] `;
+          } else {
+            result += extractTextAndLaTeX(child);
+          }
+        }
+      });
+      return result.replace(/\s+/g, " ").trim();
+    }
+
+    document.getElementById("importHtmlInput").onchange = function(e) {
+      const file = e.target.files[0];
+      if(!file) return;
+      const mon_hoc_id = document.getElementById("valImportSubject").value;
+      if (!mon_hoc_id) return alert("Vui lòng chọn môn học trước!");
+      
+      const reader = new FileReader();
+      reader.onload = async function(event) {
+        imagesFoundCount = 0;
+        const html = event.target.result;
+        const parser = new DOMParser();
+        const docx = parser.parseFromString(html, "text/html");
+        importedQuestions = [];
+        let rawQuestions = [];
+
+        docx.querySelectorAll('.que').forEach(q => {
+          let qtextNode = q.querySelector('.qtext');
+          let questionText = qtextNode ? extractTextAndLaTeX(qtextNode) : '';
+          const answerNodes = Array.from(q.querySelectorAll('.answer > div'));
+          const answers = answerNodes.map(ansNode => extractTextAndLaTeX(ansNode.querySelector('.flex-fill, div.ml-1, .specificfeedback') || ansNode));
+          
+          let correctIdx = -1;
+          const rightAnswerText = q.querySelector('.rightanswer')?.innerText || '';
+          const match = rightAnswerText.match(/(?:The correct answer is:|Câu trả lời đúng là:)\s*(.+)$/);
+
+          if (match) {
+            const correctValue = match[1].trim();
+            correctIdx = answers.findIndex(a => normalizeCompareString(a) === normalizeCompareString(correctValue));
+          }
+          if (correctIdx === -1) {
+            correctIdx = answerNodes.findIndex(node => node.classList.contains('correct'));
+          }
+          const correctKey = correctIdx !== -1 ? ['a','b','c','d'][correctIdx] : '';
+
+          if (questionText && answers.length >= 2 && correctKey) {
+            rawQuestions.push({
+              questionText, answers, correctIdx, correctKey,
+              lua_chon: { a: answers[0]||"", b: answers[1]||"", c: answers[2]||"", d: answers[3]||"" }
+            });
+          }
+        });
+
+        const tempExistSet = [...(window.currentSubjectQuestions || [])];
+        importedQuestions = rawQuestions.map(q => {
+          const isDup = isDuplicateInSet({ noi_dung: q.questionText, dap_an_dung: q.correctKey, lua_chon: q.lua_chon }, tempExistSet);
+          if(!isDup) tempExistSet.push({ noi_dung: q.questionText, dap_an_dung: q.correctKey, lua_chon: q.lua_chon });
+          return { ...q, duplicate: isDup };
+        });
+
+        const duplicateCount = importedQuestions.filter(q => q.duplicate).length;
+        
+        // Update Stats Box
+        const statsBox = document.getElementById("importHtmlStats");
+        statsBox.style.display = 'block';
+        statsBox.innerHTML = `
+          <ul class="space-y-1">
+             <li>- Tổng trích xuất: <b>${importedQuestions.length}</b> câu hỏi.</li>
+             <li>- Trùng lặp: <b class="text-red-500">${duplicateCount}</b> câu (sẽ bỏ qua).</li>
+             <li>- Phát hiện: <b class="text-amber-500">${imagesFoundCount}</b> ảnh trong đề.</li>
+             ${imagesFoundCount > 0 ? '<li class="text-[10px] text-amber-600 italic uppercase tracking-widest mt-2 border-t border-amber-200/50 pt-2"><i class="fa-solid fa-triangle-exclamation"></i> Chú ý: Các câu chứa ảnh sẽ hiện "[HÌNH ẢNH]"</li>' : ''}
+          </ul>
+        `;
+
+        let htmlResult = '';
+        importedQuestions.forEach((q, idx) => {
+          let answersHtml = q.answers.map((a, i) => {
+            const isCorrect = i === q.correctIdx;
+            const textClass = isCorrect ? 'text-emerald-600 font-bold' : 'text-slate-600';
+            const icon = isCorrect ? '<i class="fa-solid fa-circle-check ml-2"></i><span class="text-[10px] uppercase ml-1 italic">(Đúng)</span>' : '';
+            return `<div class="ml-4 mt-2 text-sm ${textClass}">${String.fromCharCode(97+i)}. <span class="mathjax-content break-words-custom">${a}</span> ${icon}</div>`;
+          }).join('');
+
+          htmlResult += `
+          <div class="p-4 rounded-xl border border-slate-200 ${q.duplicate ? 'bg-red-50 opacity-80' : 'bg-white shadow-sm'}">
+            <p class="font-black text-slate-800 text-sm mb-2 text-sharp break-words-custom">Câu ${idx+1}: <span class="mathjax-content">${q.questionText}</span></p>
+            ${answersHtml}
+            ${q.duplicate ? '<p class="text-[10px] font-black text-red-500 uppercase tracking-widest mt-3 pt-3 border-t border-red-200"><i class="fa-solid fa-ban"></i> Bị trùng</p>' : ''}
+          </div>`;
+        });
+        document.getElementById('importHtmlResult').innerHTML = htmlResult;
+        
+        if (window.MathJax && window.MathJax.typesetPromise) {
+          window.MathJax.typesetPromise(Array.from(document.querySelectorAll('.mathjax-content')));
+        }
+
+        const saveImportBtn = document.getElementById("saveImportBtn");
+        saveImportBtn.style.display = importedQuestions.length > 0 ? "inline-flex" : "none";
+        document.getElementById("questionSecurityCodeImport").dispatchEvent(new Event('input'));
+      };
+      reader.readAsText(file);
+    };
+
+    // SAVE IMPORT
+    const saveImportBtn = document.getElementById("saveImportBtn");
+    saveImportBtn.addEventListener('click', async function() {
+      const mon_hoc_id = document.getElementById("valImportSubject").value;
+      const questionsToSave = importedQuestions.filter(q => !q.duplicate);
+      if (questionsToSave.length === 0) { alert("Không có câu hỏi mới nào để lưu (tất cả đều bị trùng)."); return; }
+      
+      this.disabled = true; this.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> ĐANG LƯU...';
+      const securityCode = document.getElementById("questionSecurityCodeImport").value;
+      
+      let success = 0, fail = 0;
+      for (const q of questionsToSave) {
+        try {
+          await addDoc(collection(db, "cau_hoi"), {
+            mon_hoc_id,
+            noi_dung: q.questionText,
+            noi_dung_img: "",
+            lua_chon: q.lua_chon,
+            dap_an_dung: q.correctKey,
+            security_code: securityCode
+          });
+          success++;
+        } catch (e) { fail++; }
+      }
+      alert(`Hoàn tất! Đã lưu ${success} câu mới. Bỏ qua ${importedQuestions.length - success} câu trùng.`);
+      window.location.reload();
+    });
+
+    // MANUAL UPLOAD IMAGES
+    async function uploadToDrive(file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch('https://tracuu-app.hugo.io.vn/api/upload', { method: 'POST', body: formData });
+      if (!response.ok) throw new Error('Upload ảnh thất bại!');
+      const result = await response.json();
+      return result.url;
+    }
+
+    let manualQImgFile = null, manualAImgFiles = [null, null, null, null];
+    function handleImgInput(input, preview, removeBtn, setFile) {
+      input.addEventListener("change", function() {
+        if(this.files && this.files[0]) {
+          setFile(this.files[0]);
+          preview.src = URL.createObjectURL(this.files[0]);
+          preview.style.display = "block";
+          removeBtn.style.display = "block";
+        }
+      });
+      removeBtn.addEventListener("click", function() {
+        setFile(null);
+        preview.src = "";
+        preview.style.display = "none";
+        removeBtn.style.display = "none";
+        input.value = "";
+      });
+    }
+    
+    handleImgInput(document.getElementById("manualQuestionImageInput"), document.getElementById("manualQuestionImgPreview"), document.getElementById("manualRemoveQuestionImgBtn"), f=>manualQImgFile=f);
+    handleImgInput(document.getElementById("manualAnswerAImgInput"), document.getElementById("manualAnswerAImgPreview"), document.getElementById("manualRemoveAImgBtn"), f=>manualAImgFiles[0]=f);
+    handleImgInput(document.getElementById("manualAnswerBImgInput"), document.getElementById("manualAnswerBImgPreview"), document.getElementById("manualRemoveBImgBtn"), f=>manualAImgFiles[1]=f);
+    handleImgInput(document.getElementById("manualAnswerCImgInput"), document.getElementById("manualAnswerCImgPreview"), document.getElementById("manualRemoveCImgBtn"), f=>manualAImgFiles[2]=f);
+    handleImgInput(document.getElementById("manualAnswerDImgInput"), document.getElementById("manualAnswerDImgPreview"), document.getElementById("manualRemoveDImgBtn"), f=>manualAImgFiles[3]=f);
+
+    // MANUAL SUBMIT
+    document.getElementById("manualQuestionForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const manualBtn = document.getElementById("manualSubmitQuestionBtn");
+      manualBtn.disabled = true; manualBtn.textContent = "ĐANG XỬ LÝ DỮ LIỆU...";
+      
+      const subjectId = document.getElementById("valManualSubject").value;
+      const qText = document.getElementById("manualQuestionText").value.trim();
+      const a = document.getElementById("manualAnswerA").value.trim();
+      const b = document.getElementById("manualAnswerB").value.trim();
+      const c = document.getElementById("manualAnswerC").value.trim();
+      const d = document.getElementById("manualAnswerD").value.trim();
+      const correct = document.getElementById("manualCorrectAnswerDropdown").value;
+      
+      let noi_dung_img = '', lua_chon = {a,b,c,d};
+      try {
+        if (manualQImgFile) noi_dung_img = await uploadToDrive(manualQImgFile);
+        if (manualAImgFiles[0]) lua_chon.aImg = await uploadToDrive(manualAImgFiles[0]);
+        if (manualAImgFiles[1]) lua_chon.bImg = await uploadToDrive(manualAImgFiles[1]);
+        if (manualAImgFiles[2]) lua_chon.cImg = await uploadToDrive(manualAImgFiles[2]);
+        if (manualAImgFiles[3]) lua_chon.dImg = await uploadToDrive(manualAImgFiles[3]);
+      } catch (err) {
+        alert("Lỗi upload hình ảnh: " + err.message);
+        manualBtn.disabled = false; manualBtn.textContent = "LƯU VÀO HỆ THỐNG";
+        return;
+      }
+
+      const existSet = await loadQuestionsForSubject(subjectId);
+      if (isDuplicateInSet({noi_dung: qText, dap_an_dung: correct, lua_chon}, existSet)) {
+        alert("Câu hỏi này đã tồn tại trong môn học với đáp án đúng giống nhau!"); 
+        manualBtn.disabled=false; manualBtn.textContent="LƯU VÀO HỆ THỐNG"; 
+        return;
+      }
+
+      const securityCode = document.getElementById("questionSecurityCodeManual").value;
+      try {
+        await addDoc(collection(db, "cau_hoi"), { mon_hoc_id: subjectId, noi_dung: qText, noi_dung_img, lua_chon, dap_an_dung: correct, security_code: securityCode });
+        alert("Đã thêm câu hỏi!"); window.location.reload();
+      } catch (e) {
+        alert("Thêm câu hỏi thất bại: " + e.message); 
+        manualBtn.disabled=false; manualBtn.textContent="LƯU VÀO HỆ THỐNG";
+      }
+    });
+
+    // PASTE HANDLER
+    function bindPaste(el) {
+       if(!el) return;
+       el.addEventListener('paste', async (e) => {
+         const items = e.clipboardData?.items || [];
+         const file = Array.from(items).find(x => x.type.startsWith('image/'))?.getAsFile();
+         if(!file) return;
+         e.preventDefault();
+         const reader = new FileReader();
+         reader.onload = (ev) => {
+           const tag = `<img src="${ev.target.result}" style="max-width:100%;height:auto;border-radius:8px;margin:10px 0;">`;
+           const start = el.selectionStart, end = el.selectionEnd;
+           el.value = el.value.slice(0, start) + tag + el.value.slice(end);
+         };
+         reader.readAsDataURL(file);
+       });
+    }
+    ['manualQuestionText'].forEach(id => bindPaste(document.getElementById(id)));
+
+    // LOAD NAVBAR
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch('/menu.html').then(r => r.ok ? r.text() : "").then(h => { if(h) document.getElementById('navbar-placeholder').innerHTML = h; });
+    });
+  </script>
+</body>
+</html>

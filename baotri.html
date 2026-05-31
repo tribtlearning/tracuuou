@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Đang bảo trì · Hệ thống tạm thời gián đoạn</title>
+<meta content="Trang thông báo bảo trì: giao diện dễ nhìn, countdown thời gian còn lại, hỗ trợ dark/light mode, responsive và liên hệ hỗ trợ." name="description"/>
+<meta content="dark light" name="color-scheme"/>
+<!-- Favicon (logo & thương hiệu) -->
+<link href="/favicon.ico" rel="icon" sizes="any"/>
+<link href="/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+<!-- Fonts (đúng chuẩn, không để URL thô) -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<style>
+    :root{
+      --bg:#0f1226; --text:#e6e9ff; --muted:#b7bce5;
+      --primary:#8aa9ff; --primary-700:#5b79ff;
+      --accent:#4ade80; --warning:#fbbf24;
+      --border:rgba(255,255,255,.14); --glass:rgba(255,255,255,.08);
+      --shadow:0 20px 50px rgba(0,0,0,.35);
+    }
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f5f7ff; --text:#111827; --muted:#4b5563;
+        --primary:#3867ff; --primary-700:#2346d9;
+        --accent:#10b981; --warning:#f59e0b;
+        --border:rgba(17,24,39,.08); --glass:rgba(255,255,255,.65);
+        --shadow:0 12px 30px rgba(17,24,39,.12);
+      }
+    }
+
+    /* Reset nhỏ giúp SVG/ảnh không tràn */
+    *,*::before,*::after{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    img,svg{ max-width:100%; height:auto; display:block; }
+
+    body{
+      margin:0; color:var(--text);
+      font-family:"Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 18% 12%, #1b2053 0%, var(--bg) 35%),
+        radial-gradient(900px 600px at 85% 90%, #1a1f4a 0%, var(--bg) 40%);
+      /* Cho phép cuộn nếu cao hơn viewport, tránh cắt footer */
+      overflow:auto;
+    }
+
+    .container{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+
+    .card{
+      width:min(980px, 100%);
+      border-radius:28px;
+      background:var(--glass);
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(12px) saturate(1.2);
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute; inset:-1px; border-radius:28px; padding:1px;
+      background:linear-gradient(120deg, rgba(138,169,255,.55), rgba(255,255,255,0), rgba(74,222,128,.55));
+      mask:linear-gradient(#000,#000) content-box, linear-gradient(#000,#000);
+      -webkit-mask-composite:xor; mask-composite:exclude;
+      pointer-events:none;
+    }
+
+    .content{
+      display:grid;
+      grid-template-columns: 1.12fr .88fr; /* cân lại tỉ lệ */
+      gap:36px; padding:42px;
+    }
+    @media (max-width: 900px){
+      .content{ grid-template-columns:1fr; padding:28px; }
+    }
+
+    /* Badge + logo */
+    .badge{
+      display:inline-flex; align-items:center; gap:12px;
+      margin-bottom:18px; padding:12px 16px;
+      border-radius:999px; border:1px dashed var(--border);
+      background:rgba(255,255,255,.06); color:var(--primary); font-weight:600;
+    }
+    .brand{ width:28px; height:28px; border-radius:6px; display:inline-block;
+      background:url('/favicon.ico') center/contain no-repeat;
+      box-shadow:0 0 0 1px rgba(255,255,255,.18) inset; }
+    .brand-ring{ width:36px; height:36px; border-radius:999px; display:inline-grid; place-items:center;
+      background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.04));
+      border:1px solid var(--border); }
+
+    h1{ margin:0 0 10px; font-size:clamp(30px,5vw,48px); line-height:1.1; letter-spacing:-.02em; color:#0f172a; }
+    @media (prefers-color-scheme:dark){ h1{ color:var(--text); } }
+    .lead{ color:var(--muted); font-size:clamp(15px,2.1vw,18px); line-height:1.6; }
+
+    /* Countdown */
+    .countdown{
+      display:grid; grid-template-columns:repeat(4, minmax(78px, 1fr));
+      gap:12px; margin-top:18px;
+    }
+    .cd-item{
+      text-align:center; padding:12px 10px; border-radius:14px;
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+    }
+    .cd-value{ font-size:22px; font-weight:800; letter-spacing:.5px; color:#0f172a; }
+    .cd-label{ font-size:12px; color:var(--muted); margin-top:4px; }
+    @media (prefers-color-scheme:dark){ .cd-value{ color:var(--text);} }
+
+    /* Buttons */
+    .actions{ display:flex; flex-wrap:wrap; gap:12px; margin-top:22px; }
+    .btn{
+      appearance:none; border:1px solid var(--border);
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+      color:var(--text); padding:12px 18px; border-radius:12px;
+      font-weight:600; letter-spacing:.2px; cursor:pointer;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .2s ease;
+      box-shadow:0 6px 18px rgba(0,0,0,.18);
+      text-decoration:none; display:inline-flex; align-items:center; gap:8px;
+    }
+    .btn:hover{ transform: translateY(-1px); box-shadow:0 10px 22px rgba(0,0,0,.22); }
+    .btn.primary{ border-color:rgba(138,169,255,.55); background:linear-gradient(180deg, rgba(138,169,255,.35), rgba(138,169,255,.18)); color:#fff; }
+    .btn.ghost{ background:transparent; }
+
+    /* Cột phải: minh họa SVG vector – kích thước an toàn, không tràn */
+    .illustration-wrap{ display:grid; place-items:center; }
+    .illustration{
+      width:clamp(220px, 32vw, 360px); border-radius:16px;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      box-shadow:0 10px 30px rgba(0,0,0,.20);
+      padding:10px;
+    }
+    .illustration svg{ width:100%; height:auto; display:block; border-radius:12px; }
+
+    /* Footer */
+    footer{
+      padding:12px 20px; display:flex; justify-content:space-between; align-items:center;
+      color:var(--muted); font-size:12px; border-top:1px dashed var(--border);
+      background:rgba(255,255,255,.04); gap:8px; flex-wrap:wrap;
+    }
+    .kbd{ font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-weight:700; background:rgba(255,255,255,.08); padding:2px 6px; border-radius:6px; border:1px solid var(--border); }
+
+    /* Tắt chuyển động nếu người dùng chọn reduce motion */
+    @media (prefers-reduced-motion: reduce){
+      .status-glow{ animation:none !important; }
+    }
+  
+html { -webkit-text-size-adjust: 100%; }
+body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+@media (max-width: 420px) {
+  .countdown, .grid { display: grid; grid-template-columns: repeat(2, 1fr) !important; }
+}
+</style>
+</head>
+<body>
+<main class="container" role="main">
+<article aria-labelledby="title" class="card">
+<div class="content">
+<!-- Cột trái: nội dung -->
+<section>
+<span aria-hidden="true" class="badge">
+<span class="brand-ring"><span aria-hidden="true" class="brand"></span></span>
+<!-- Wrench icon -->
+<svg aria-hidden="true" fill="none" height="22" stroke="currentColor" stroke-width="1.5" viewbox="0 0 24 24" width="22">
+<path d="M21 7a6 6 0 0 1-7.5 5.8l-5.7 5.7a2 2 0 0 1-2.8-2.8l5.7-5.7A6 6 0 0 1 7 3a6 6 0 0 0 14 4z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+            Đang bảo trì · Hệ thống tạm thời gián đoạn
+          </span>
+<h1 id="title">Đang bảo trì</h1>
+<p class="lead">
+            Chúng tôi đang cập nhật/điều chỉnh hệ thống để cải thiện hiệu năng và độ ổn định.
+            Vui lòng quay lại sau ít phút. Hẹn gặp bạn sớm!
+          </p>
+<!-- Countdown -->
+<div aria-label="Thời gian còn lại cho đến khi kết thúc bảo trì" aria-live="polite" class="countdown">
+<div class="cd-item"><div class="cd-value" id="cd-days">--</div><div class="cd-label">Ngày</div></div>
+<div class="cd-item"><div class="cd-value" id="cd-hours">--</div><div class="cd-label">Giờ</div></div>
+<div class="cd-item"><div class="cd-value" id="cd-mins">--</div><div class="cd-label">Phút</div></div>
+<div class="cd-item"><div class="cd-value" id="cd-secs">--</div><div class="cd-label">Giây</div></div>
+</div>
+<div class="actions">
+<button aria-label="Tải lại trang" class="btn primary" id="btnReload" onclick="location.reload()">🔄 Tải lại</button>
+<a aria-label="Liên hệ hỗ trợ" class="btn ghost" href="mailto:support@hugo.io.vn" id="supportLink">✉️ Liên hệ hỗ trợ</a>
+</div>
+</section>
+<!-- Cột phải: minh họa SVG (vector, không nền caro) -->
+<aside aria-hidden="true" class="illustration-wrap">
+<div aria-label="Minh họa công trường đang bảo trì" class="illustration" role="img">
+<svg aria-hidden="true" viewbox="0 0 320 240" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<lineargradient id="panel" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0%" stop-color="#8aa9ff"></stop>
+<stop offset="100%" stop-color="#4ade80"></stop>
+</lineargradient>
+<lineargradient id="cone" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#f97316"></stop>
+<stop offset="100%" stop-color="#ea580c"></stop>
+</lineargradient>
+<filter height="120%" id="shadow" width="120%" x="-10%" y="-10%">
+<fedropshadow dx="0" dy="6" flood-color="rgba(0,0,0,.22)" stddeviation="6"></fedropshadow>
+</filter>
+</defs>
+<!-- Sàn -->
+<rect fill="#94a3b8" height="6" rx="3" width="280" x="20" y="210"></rect>
+<!-- Màn hình bảo trì -->
+<g filter="url(#shadow)">
+<rect fill="#0f172a" height="120" rx="16" width="240" x="40" y="50"></rect>
+<rect fill="#1f2937" height="18" rx="9" width="216" x="52" y="62"></rect>
+<rect fill="url(#panel)" height="12" opacity="0.95" rx="6" width="184" x="52" y="92"></rect>
+<rect fill="#5b79ff" height="12" opacity="0.80" rx="6" width="148" x="52" y="116"></rect>
+<rect fill="#10b981" height="12" opacity="0.80" rx="6" width="208" x="52" y="140"></rect>
+</g>
+<!-- Cần trục + bảng cảnh báo nhỏ -->
+<line stroke="#94a3b8" stroke-width="2" x1="258" x2="258" y1="40" y2="92"></line>
+<line stroke="#94a3b8" stroke-width="2" x1="220" x2="258" y1="40" y2="40"></line>
+<rect fill="#fde047" height="16" rx="2" stroke="#f59e0b" stroke-width="2" width="12" x="252" y="92"></rect>
+<!-- Vật cản sọc vàng-đen gọn -->
+<g transform="translate(90,174)">
+<rect fill="#111827" height="20" rx="6" stroke="#334155" stroke-width="2" width="140"></rect>
+<g fill="#facc15">
+<rect height="20" transform="skewX(-25)" width="16" x="6"></rect>
+<rect height="20" transform="skewX(-25)" width="16" x="30"></rect>
+<rect height="20" transform="skewX(-25)" width="16" x="54"></rect>
+<rect height="20" transform="skewX(-25)" width="16" x="78"></rect>
+<rect height="20" transform="skewX(-25)" width="16" x="102"></rect>
+<rect height="20" transform="skewX(-25)" width="16" x="126"></rect>
+</g>
+<rect fill="#94a3b8" height="6" rx="3" width="140" y="-6"></rect>
+</g>
+<!-- Kỹ sư -->
+<g transform="translate(48,156)">
+<rect fill="#64748b" height="6" rx="3" width="34" x="0" y="46"></rect>
+<circle cx="13" cy="18" fill="#fde68a" r="8" stroke="#f59e0b" stroke-width="2"></circle>
+<rect fill="#3b82f6" height="22" rx="3" width="16" x="6" y="26"></rect>
+<rect fill="#0ea5e9" height="14" rx="3" width="10" x="22" y="30"></rect>
+</g>
+<!-- Hai nón công trường -->
+<g transform="translate(112,206)">
+<path d="M0 0h26l6 14H-6L0 0z" fill="url(#cone)"></path>
+<rect fill="#94a3b8" height="6" rx="3" width="38" x="-6" y="14"></rect>
+</g>
+<g transform="translate(192,206)">
+<path d="M0 0h26l6 14H-6L0 0z" fill="url(#cone)"></path>
+<rect fill="#94a3b8" height="6" rx="3" width="38" x="-6" y="14"></rect>
+</g>
+</svg>
+</div>
+</aside>
+</div>
+<footer>
+<div>Thông báo: hệ thống tạm thời gián đoạn do bảo trì.</div>
+<div>Phím tắt: <span class="kbd">F5</span> tải lại</div>
+<div>Liên hệ: <a href="mailto:support@hugo.io.vn" id="supportLinkFooter" style="color:inherit;font-weight:700;text-decoration:underline">support@hugo.io.vn</a></div>
+</footer>
+</article>
+</main>
+<script>
+    // ====== CẤU HÌNH COUNTDOWN ======
+    // Ví dụ: '2025-11-09T12:00:00+07:00'
+    const MAINT_END_ISO = '2026-06-28T00:00:00+07:00';
+    const qsUntil = new URLSearchParams(location.search).get('until');
+    const targetISO = qsUntil || MAINT_END_ISO;
+
+    // Phím tắt
+    window.addEventListener('keydown', (e)=>{ if(e.key==='F5') location.reload(); });
+
+    // Countdown
+    const el = {
+      d: document.getElementById('cd-days'),
+      h: document.getElementById('cd-hours'),
+      m: document.getElementById('cd-mins'),
+      s: document.getElementById('cd-secs'),
+      reload: document.getElementById('btnReload')
+    };
+    const pad = n => String(n).padStart(2,'0');
+
+    function tick(){
+      const end = new Date(targetISO), now = new Date(), diff = end - now;
+      if (isNaN(end.getTime())) return; // ngày giờ cấu hình sai
+      if (diff <= 0){
+        el.d.textContent = el.h.textContent = el.m.textContent = el.s.textContent = '00';
+        el.reload.textContent = '🚀 Vào lại hệ thống';
+        el.reload.setAttribute('aria-label','Vào lại hệ thống');
+        el.reload.focus();
+        // Nếu muốn tự reload sau khi hết giờ: bật dòng dưới
+        // setTimeout(()=>location.reload(), 1500);
+        return true;
+      }
+      const s = Math.floor(diff/1000);
+      const d = Math.floor(s/86400);
+      const h = Math.floor((s%86400)/3600);
+      const m = Math.floor((s%3600)/60);
+      const sec = s%60;
+      el.d.textContent = pad(d);
+      el.h.textContent = pad(h);
+      el.m.textContent = pad(m);
+      el.s.textContent = pad(sec);
+      return false;
+    }
+    (function start(){
+      let done = tick();
+      if (done) return;
+      const t = setInterval(()=>{ if(tick()) clearInterval(t); }, 1000);
+    })();
+
+    // Mailto: gắn ngữ cảnh URL & User‑Agent
+    (function(){
+      const targets = [
+        document.getElementById('supportLink'),
+        document.getElementById('supportLinkFooter')
+      ];
+      const subject = encodeURIComponent('[Bảo trì] ' + location.host);
+      const body = encodeURIComponent('URL: ' + location.href + '\nUser-Agent: ' + navigator.userAgent + '\nMô tả vấn đề: ');
+      for (const a of targets) if (a) a.href = 'mailto:support@hugo.io.vn?subject='+subject+'&body='+body;
+    })();
+  </script>
+</body>
+</html>

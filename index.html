@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Cảm ơn đã sử dụng | tracuu.hugo.io.vn</title>
+  <meta name="description" content="Hệ thống tra cứu câu hỏi học tập TVU đã hoàn tất sứ mệnh. Cảm ơn bạn đã đồng hành!">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="data:,">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { DEFAULT: '#005625', light: '#007030', dark: '#003d1a', soft: '#f8faf9' }
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] },
+          keyframes: {
+            fadeUp:   { '0%': { opacity: '0', transform: 'translateY(24px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+            scaleIn:  { '0%': { opacity: '0', transform: 'scale(0.85)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
+            floatY:   { '0%, 100%': { transform: 'translateY(0px)' }, '50%': { transform: 'translateY(-10px)' } },
+            shimmer:  { '0%': { backgroundPosition: '-400px 0' }, '100%': { backgroundPosition: '400px 0' } },
+            /* Vòng tròn countdown SVG */
+            countdown: { '0%': { strokeDashoffset: '0' }, '100%': { strokeDashoffset: '113' } }
+          },
+          animation: {
+            'fade-up':   'fadeUp 0.7s ease both',
+            'fade-up-2': 'fadeUp 0.7s 0.15s ease both',
+            'fade-up-3': 'fadeUp 0.7s 0.3s ease both',
+            'fade-up-4': 'fadeUp 0.7s 0.45s ease both',
+            'scale-in':  'scaleIn 0.6s ease both',
+            'float':     'floatY 3.5s ease-in-out infinite',
+            'shimmer':   'shimmer 2.5s linear infinite',
+          }
+        }
+      }
+    }
+  </script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; -webkit-font-smoothing: antialiased; }
+
+    .bg-grid {
+      background-image: linear-gradient(rgba(0,86,37,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,86,37,.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .glow-ring { box-shadow: 0 0 0 8px rgba(0,86,37,.08), 0 0 0 20px rgba(0,86,37,.04); }
+    .shimmer-badge {
+      background: linear-gradient(90deg, #005625 0%, #00a84f 50%, #005625 100%);
+      background-size: 400px 100%;
+      animation: shimmer 2.5s linear infinite;
+    }
+    .divider-fade { background: linear-gradient(90deg, transparent, #e2e8f0 30%, #e2e8f0 70%, transparent); height: 1px; }
+
+    /* === POPUP THÔNG BÁO === */
+    #notif-popup {
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    #notif-popup.hiding {
+      opacity: 0 !important;
+      transform: scale(0.95) translateY(8px) !important;
+      pointer-events: none;
+    }
+
+    /* Vòng countdown SVG */
+    #countdown-ring {
+      transform: rotate(-90deg);
+      transform-origin: center;
+    }
+    #countdown-ring circle {
+      stroke-dasharray: 113;
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 1s linear;
+    }
+
+    /* Quill read-only trong popup */
+    .ql-editor { padding: 0; border: none; line-height: 1.75; font-size: 0.9rem; color: #374151; }
+    .ql-editor p { margin-bottom: 0.75em; }
+    .ql-editor a { color: #005625; font-weight: 600; }
+    .ql-editor img { border-radius: 0.5rem; max-width: 100%; }
+    .ql-editor h1, .ql-editor h2, .ql-editor h3 { font-weight: 700; margin: 1em 0 0.4em; color: #111; }
+
+    /* Thanh cuộn nhỏ cho popup body */
+    #notif-body::-webkit-scrollbar { width: 5px; }
+    #notif-body::-webkit-scrollbar-track { background: transparent; }
+    #notif-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  </style>
+</head>
+<body class="text-slate-900 min-h-screen flex flex-col overflow-x-hidden bg-grid">
+
+  <!-- Navbar Placeholder -->
+  <header id="navbar-placeholder" class="fixed top-0 w-full z-[100] bg-white border-b border-slate-200 shadow-sm"></header>
+
+  <!-- ================================================================
+       POPUP THÔNG BÁO — tự đóng sau 5s nếu không scroll
+  ================================================================ -->
+  <div id="notif-overlay" class="fixed inset-0 z-[200] hidden items-end sm:items-center justify-center p-4 sm:p-6">
+    <!-- Backdrop mờ -->
+    <div id="notif-backdrop" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+
+    <!-- Panel -->
+    <div id="notif-popup" class="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col" style="max-height: 90vh;">
+
+      <!-- Thanh màu top (danh mục) -->
+      <div id="notif-topbar" class="h-1.5 w-full bg-brand"></div>
+
+      <!-- Header popup -->
+      <div class="px-6 pt-5 pb-4 border-b border-slate-100 bg-slate-50/70">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex-1">
+            <!-- Badge danh mục + ngày -->
+            <div class="flex flex-wrap items-center gap-2 mb-2">
+              <span id="notif-category" class="bg-brand/10 text-brand border border-brand/20 text-[10px] font-black px-2.5 py-0.5 rounded uppercase tracking-widest">Thông báo</span>
+              <span id="notif-date" class="text-[10px] text-slate-400 font-bold uppercase tracking-wider"></span>
+            </div>
+            <h3 id="notif-title" class="text-base sm:text-lg font-black text-slate-900 leading-snug"></h3>
+          </div>
+
+          <!-- Nút đóng + vòng đếm ngược -->
+          <div class="flex-shrink-0 flex items-center gap-2 mt-0.5">
+            <!-- Vòng tròn countdown SVG -->
+            <div id="countdown-wrapper" class="relative w-9 h-9 flex items-center justify-center" title="Tự đóng sau 5 giây">
+              <svg width="36" height="36" viewBox="0 0 36 36" class="absolute inset-0">
+                <!-- Track -->
+                <circle cx="18" cy="18" r="15" fill="none" stroke="#e2e8f0" stroke-width="3"/>
+                <!-- Progress -->
+                <circle id="countdown-ring" cx="18" cy="18" r="15" fill="none" stroke="#005625" stroke-width="3" stroke-linecap="round"/>
+              </svg>
+              <span id="countdown-num" class="relative text-xs font-black text-brand">5</span>
+            </div>
+
+            <button id="notif-close-btn" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-red-50 hover:text-red-500 text-slate-400 flex items-center justify-center transition-all" title="Đóng">
+              <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nội dung có scroll -->
+      <div id="notif-body" class="px-6 py-5 overflow-y-auto flex-1">
+        <div id="notif-content" class="ql-editor"></div>
+      </div>
+
+      <!-- Footer: link xem toàn bộ -->
+      <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between gap-3">
+        <p class="text-[10px] text-slate-400 font-medium italic">
+          <i class="fa-solid fa-bell text-brand/60 mr-1"></i>
+          Cuộn để giữ thông báo · Tự đóng nếu không tương tác
+        </p>
+        <a id="notif-readmore" href="/thongbao" class="flex-shrink-0 text-xs font-black text-brand hover:text-brand-light flex items-center gap-1 transition-colors uppercase tracking-wider">
+          Xem tất cả <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <main class="flex-grow flex items-center justify-center px-4 pt-20 pb-16">
+    <div class="w-full max-w-2xl mx-auto">
+
+      <!-- Card chính -->
+      <div class="bg-white rounded-3xl sm:rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden animate-scale-in">
+
+        <div class="relative px-6 py-10 sm:px-12 sm:py-14 text-center bg-gradient-to-b from-brand/6 to-transparent border-b border-slate-100">
+          <span class="absolute top-6 left-10 w-2 h-2 rounded-full bg-brand/20 hidden sm:block"></span>
+          <span class="absolute top-12 left-6 w-1.5 h-1.5 rounded-full bg-emerald-300/60 hidden sm:block"></span>
+          <span class="absolute top-8 right-12 w-2 h-2 rounded-full bg-brand/15 hidden sm:block"></span>
+          <span class="absolute top-16 right-8 w-1 h-1 rounded-full bg-emerald-400/50 hidden sm:block"></span>
+
+          <div class="relative inline-block mb-6 sm:mb-8 animate-float">
+            <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white border-2 border-slate-100 flex items-center justify-center glow-ring shadow-xl mx-auto">
+              <i class="fa-solid fa-flag-checkered text-brand text-4xl sm:text-5xl"></i>
+            </div>
+            <span class="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center shadow-md border-2 border-white">
+              <i class="fa-solid fa-check text-white text-[10px]"></i>
+            </span>
+          </div>
+
+          <div class="inline-flex items-center gap-2 shimmer-badge text-white text-[10px] sm:text-xs font-black uppercase tracking-[0.18em] px-4 py-1.5 rounded-full mb-5 sm:mb-6 shadow-lg shadow-brand/20 animate-fade-up">
+            <i class="fa-solid fa-circle-check text-[9px]"></i>
+            SỨ MỆNH HOÀN TẤT
+          </div>
+
+          <h1 class="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight mb-3 sm:mb-4 animate-fade-up-2">
+            Cảm ơn bạn<br><span class="text-brand">đã đồng hành!</span>
+          </h1>
+
+          <p class="text-slate-500 text-sm sm:text-base font-medium leading-relaxed max-w-md mx-auto animate-fade-up-3">
+            Hệ thống <span class="font-bold text-slate-700">Tra Cứu Học Tập TVU</span> đã hoàn thành
+            trọn vẹn sứ mệnh hỗ trợ sinh viên ôn thi và tra cứu tài liệu.
+          </p>
+        </div>
+
+        <div class="px-6 py-8 sm:px-12 sm:py-10 animate-fade-up-4">
+          <div class="grid grid-cols-3 gap-3 sm:gap-4 mb-8">
+            <div class="text-center bg-slate-50 rounded-2xl px-3 py-4 sm:py-5 border border-slate-100">
+              <div class="text-xl sm:text-2xl font-black text-brand mb-1"><i class="fa-solid fa-book-open"></i></div>
+              <div class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wide">Tài liệu</div>
+              <div class="text-[10px] sm:text-xs text-slate-400 mt-0.5">Nơi từng hỗ trợ tra cứu</div>
+            </div>
+            <div class="text-center bg-slate-50 rounded-2xl px-3 py-4 sm:py-5 border border-slate-100">
+              <div class="text-xl sm:text-2xl font-black text-brand mb-1"><i class="fa-solid fa-users"></i></div>
+              <div class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wide">Sinh viên</div>
+              <div class="text-[10px] sm:text-xs text-slate-400 mt-0.5">Đã đồng hành cùng bạn trên chặng đường học tập</div>
+            </div>
+            <div class="text-center bg-slate-50 rounded-2xl px-3 py-4 sm:py-5 border border-slate-100">
+              <div class="text-xl sm:text-2xl font-black text-brand mb-1"><i class="fa-solid fa-heart"></i></div>
+              <div class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wide">Tâm huyết</div>
+              <div class="text-[10px] sm:text-xs text-slate-400 mt-0.5">100%</div>
+            </div>
+          </div>
+
+          <div class="divider-fade mb-7"></div>
+
+          <div class="flex gap-4 items-start bg-brand/5 border border-brand/10 rounded-2xl p-4 sm:p-5 mb-7">
+            <span class="flex-shrink-0 w-9 h-9 rounded-xl bg-brand flex items-center justify-center shadow-md shadow-brand/20 mt-0.5">
+              <i class="fa-solid fa-quote-left text-white text-sm"></i>
+            </span>
+            <p class="text-slate-600 text-sm sm:text-base font-medium leading-relaxed italic">
+              Dù hệ thống đã dừng hoạt động, tri thức bạn đã tích lũy vẫn mãi thuộc về bạn.
+              Chúc bạn thành công trên con đường phía trước!
+            </p>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+            <span class="flex items-center gap-1.5">
+              <i class="fa-solid fa-location-dot text-brand/60"></i>
+              <span class="font-semibold text-slate-500">tracuu.hugo.io.vn</span>
+            </span>
+            <span class="flex items-center gap-1.5">
+              <i class="fa-regular fa-calendar text-brand/60"></i>
+              Phục vụ sinh viên TVU
+            </span>
+            <span class="flex items-center gap-1.5">
+              <i class="fa-solid fa-code text-brand/60"></i>
+              Nhóm sinh viên
+              <i class="fa-solid fa-heart text-red-400 text-[10px]"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <p class="text-center text-xs text-slate-400 mt-5 font-medium animate-fade-up-4">
+        Bạn vẫn có thể lưu lại trang này để ghi nhớ khoảng thời gian đã dùng hệ thống 💚
+      </p>
+    </div>
+  </main>
+
+  <!-- ================================================================
+       FIREBASE + LOGIC POPUP
+  ================================================================ -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAjBMA-atKKvecY8CWeQXZsIQ3yHckZ92M",
+      authDomain: "tracuu-d3ee9.firebaseapp.com",
+      projectId: "tracuu-d3ee9",
+      storageBucket: "tracuu-d3ee9.appspot.com",
+      messagingSenderId: "593568604435",
+      appId: "1:593568604435:web:9a5145457a8ee734143ae6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    // ── Tiện ích ──────────────────────────────────────────────────────────
+    const getCategoryStyles = (cat) => {
+      const map = {
+        'Quan Trọng': { topbar: '#ef4444', badge: 'bg-red-50 text-red-600 border-red-200' },
+        'Lịch Học':   { topbar: '#3b82f6', badge: 'bg-blue-50 text-blue-600 border-blue-200' },
+        'Sự Kiện':    { topbar: '#f59e0b', badge: 'bg-amber-50 text-amber-600 border-amber-200' },
+        'Tin Tức':    { topbar: '#a855f7', badge: 'bg-purple-50 text-purple-600 border-purple-200' },
+        'Thông Tin Chung': { topbar: '#0ea5e9', badge: 'bg-sky-50 text-sky-600 border-sky-200' },
+      };
+      return map[cat] || { topbar: '#005625', badge: 'bg-brand/10 text-brand border-brand/20' };
+    };
+
+    const formatDate = (ts) => {
+      if (!ts) return '';
+      return ts.toDate().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    };
+
+    // ── Lấy thông báo mới nhất ────────────────────────────────────────────
+    async function loadLatestAnnouncement() {
+      try {
+        const q    = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(1));
+        const snap = await getDocs(q);
+        if (snap.empty) return;
+
+        const docSnap = snap.docs[0];
+        const data    = docSnap.data();
+        showNotifPopup(docSnap.id, data);
+      } catch (e) {
+        console.warn('Không lấy được thông báo:', e);
+      }
+    }
+
+    // ── Hiển thị popup ────────────────────────────────────────────────────
+    function showNotifPopup(id, data) {
+      const overlay  = document.getElementById('notif-overlay');
+      const popup    = document.getElementById('notif-popup');
+      const body     = document.getElementById('notif-body');
+      const ring     = document.getElementById('countdown-ring');
+      const numEl    = document.getElementById('countdown-num');
+      const closeBtn = document.getElementById('notif-close-btn');
+      const backdrop = document.getElementById('notif-backdrop');
+      const readmore = document.getElementById('notif-readmore');
+
+      // Điền nội dung
+      const styles = getCategoryStyles(data.category);
+      document.getElementById('notif-topbar').style.background = styles.topbar;
+
+      const catEl = document.getElementById('notif-category');
+      catEl.className = `${styles.badge} border text-[10px] font-black px-2.5 py-0.5 rounded uppercase tracking-widest`;
+      catEl.textContent = data.category || 'Thông báo';
+
+      document.getElementById('notif-date').textContent = formatDate(data.createdAt);
+      document.getElementById('notif-title').textContent = data.title || '';
+      document.getElementById('notif-content').innerHTML = data.content || '';
+      readmore.href = `/thongbao?id=${id}`;
+
+      // Hiện overlay
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+
+      // ── LOGIC ĐẾM NGƯỢC 10 GIÂY ────────────────────────────────────────
+      const TOTAL     = 10;          // giây
+      const CIRCUMF   = 113;        // 2 * π * r (r=18)
+      let   timeLeft  = TOTAL;
+      let   paused    = false;
+      let   timer     = null;
+
+      // Đặt dash ban đầu về 0 (vòng đầy)
+      ring.style.strokeDashoffset = '0';
+      numEl.textContent = TOTAL;
+
+      const closePopup = () => {
+        clearInterval(timer);
+        popup.classList.add('hiding');
+        // Xóa scroll listener
+        body.removeEventListener('scroll', onScroll);
+        setTimeout(() => {
+          overlay.classList.add('hidden');
+          overlay.classList.remove('flex');
+          popup.classList.remove('hiding');
+        }, 380);
+      };
+
+      // Tick mỗi giây
+      timer = setInterval(() => {
+        if (paused) return;       // bị tạm dừng vì user scroll
+        timeLeft--;
+
+        // Cập nhật vòng SVG
+        const offset = CIRCUMF * (1 - timeLeft / TOTAL);
+        ring.style.strokeDashoffset = offset.toString();
+        numEl.textContent = timeLeft > 0 ? timeLeft : '';
+
+        if (timeLeft <= 0) closePopup();
+      }, 1000);
+
+      // Nếu user SCROLL trong body → dừng đếm ngược, ẩn vòng
+      const onScroll = () => {
+        if (!paused) {
+          paused = true;
+          clearInterval(timer);               // dừng timer hẳn
+          document.getElementById('countdown-wrapper').style.display = 'none';
+        }
+      };
+      body.addEventListener('scroll', onScroll, { passive: true });
+
+      // Nút đóng thủ công
+      closeBtn.addEventListener('click', closePopup);
+      backdrop.addEventListener('click', closePopup);
+    }
+
+    // ── Khởi động ─────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      // Delay nhỏ để trang render xong trước khi popup xuất hiện
+      setTimeout(loadLatestAnnouncement, 900);
+
+      fetch('/menu.html')
+        .then(r => r.ok ? r.text() : '')
+        .then(h => { if (h) document.getElementById('navbar-placeholder').innerHTML = h; })
+        .catch(() => {});
+    });
+  </script>
+</body>
+</html>

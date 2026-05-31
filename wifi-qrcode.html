@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>Tạo Mã QR Wi-Fi | Hệ Thống Tra Cứu</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- QR Code & Canvas Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+
+    /* FIX: Thêm min-width và flex-shrink: 0 để chống bị bóp méo Layout */
+    .poster-horizontal {
+      width: 800px; min-width: 800px; height: 400px; flex-shrink: 0;
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      display: flex; align-items: center; justify-content: space-between;
+      border-radius: 24px; box-sizing: border-box; padding: 40px;
+      border: 1px solid #e2e8f0; position: relative; overflow: hidden;
+    }
+    .poster-horizontal::before {
+      content: ""; position: absolute; top: -50%; left: -20%;
+      width: 60%; height: 200%; background: linear-gradient(to right, #4f46e5, #3b82f6);
+      transform: rotate(15deg); z-index: 0; border-radius: 40px;
+    }
+    
+    /* FIX: Thêm min-width và flex-shrink: 0 */
+    .poster-vertical {
+      width: 450px; min-width: 450px; height: 720px; flex-shrink: 0;
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      border-radius: 24px; box-sizing: border-box; padding: 35px;
+      border: 1px solid #e2e8f0; position: relative; overflow: hidden;
+    }
+    .poster-vertical::before {
+      content: ""; position: absolute; top: -20%; left: -50%;
+      width: 200%; height: 26%; background: linear-gradient(to right, #4f46e5, #3b82f6);
+      transform: rotate(-5deg); z-index: 0; border-radius: 40px;
+    }
+
+    .poster-content { position: relative; z-index: 10; display: flex; align-items: center; width: 100%; height: 100%; }
+    .poster-vertical .poster-content { flex-direction: column; justify-content: center; gap: 20px; }
+    .poster-left { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; color: white; padding-right: 40px; }
+    .poster-vertical .poster-left { flex: none; align-items: center; padding-right: 0; text-align: center; color: #1e293b; }
+    
+    /* FIX: Đổi 'shadow:' thành 'box-shadow:' cho chuẩn CSS */
+    .poster-right { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); display: flex; flex-direction: column; align-items: center; border: 2px solid #f1f5f9; min-width: 300px; }
+    .poster-logo-container { width: 130px; height: 130px; background: white; border-radius: 24px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
+    .poster-logo-container img { max-width: 85%; max-height: 85%; object-fit: contain; }
+    
+    .poster-title { font-size: 34px; font-weight: 800; line-height: 1.25; margin-bottom: 0; }
+    .qr-wrapper { width: 180px; height: 180px; background: white; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; overflow: hidden; }
+    .wifi-details { width: 100%; text-align: center; }
+    .wifi-row { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #e2e8f0; }
+    .wifi-label { font-size: 13px; color: #64748b; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px; }
+    .wifi-val { font-size: 18px; color: #0f172a; font-weight: 700; word-break: break-all; }
+    .text-highlight { color: #4f46e5 !important; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col overflow-x-hidden">
+  <header id="navbar-placeholder" class="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-sm shadow-sm h-[70px]"></header>
+
+  <main class="flex-grow container mx-auto px-4 pt-24 pb-12">
+    <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">Tạo Poster Wi-Fi</h1>
+        <p class="text-slate-500 mt-2">Thiết kế bảng quét mã QR Wi-Fi chuyên nghiệp.</p>
+      </div>
+      <div class="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium shadow-sm transition-all">
+        <span class="relative flex h-3 w-3">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+        </span>
+        <span>Online: <span id="online-counter" class="font-bold text-emerald-900">...</span> người</span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div class="lg:col-span-4 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden sticky top-24">
+        <div class="px-6 py-4 border-b border-slate-100 bg-slate-50">
+          <h2 class="font-bold text-slate-800"><i class="fa-solid fa-wifi text-indigo-500 mr-2"></i> Thông Tin Wi-Fi</h2>
+        </div>
+        <form id="wifiForm" class="p-6 space-y-5">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Tên Wi-Fi (SSID) *</label>
+            <input type="text" id="ssid" class="block w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-indigo-600 focus:border-indigo-600" required>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Mật khẩu</label>
+            <input type="text" id="password" class="block w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-indigo-600 focus:border-indigo-600">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Loại bảo mật</label>
+            <select id="encryption" class="block w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-indigo-600 focus:border-indigo-600 bg-white">
+              <option value="WPA">WPA/WPA2</option>
+              <option value="WEP">WEP</option>
+              <option value="nopass">None</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Logo (Tùy chọn)</label>
+            <input type="file" id="logoUpload" class="block w-full text-xs text-slate-500" accept="image/*">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Khổ giấy</label>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="p-2 border rounded-lg cursor-pointer hover:bg-slate-50 text-center">
+                <input type="radio" name="orientation" value="horizontal" class="peer sr-only" checked>
+                <span class="text-xs font-bold peer-checked:text-indigo-600">Ngang</span>
+              </label>
+              <label class="p-2 border rounded-lg cursor-pointer hover:bg-slate-50 text-center">
+                <input type="radio" name="orientation" value="vertical" class="peer sr-only">
+                <span class="text-xs font-bold peer-checked:text-indigo-600">Dọc</span>
+              </label>
+            </div>
+          </div>
+          <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700">Tạo Poster</button>
+        </form>
+      </div>
+
+      <div class="lg:col-span-8 bg-slate-200/50 rounded-2xl border border-dashed border-slate-300 p-4 sm:p-8 flex flex-col items-center justify-center min-h-[500px] relative max-w-full overflow-x-auto custom-scrollbar">
+        <div id="empty-state" class="text-center text-slate-400">
+          <i class="fa-solid fa-qrcode text-6xl mb-4 text-slate-300"></i>
+          <p>Chưa có dữ liệu</p>
+        </div>
+        <div id="result-container" class="hidden w-max flex-col items-center mx-auto pb-4">
+          <div id="poster-render-area" class="origin-top shadow-2xl"></div>
+          <button id="downloadBtn" class="mt-6 px-8 py-3 bg-emerald-600 text-white font-bold rounded-full hover:bg-emerald-700 shadow-lg">Tải Poster (.png)</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, onValue, onDisconnect, set, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAjBMA-atKKvecY8CWeQXZsIQ3yHckZ92M",
+      authDomain: "tracuu-d3ee9.firebaseapp.com",
+      projectId: "tracuu-d3ee9",
+      storageBucket: "tracuu-d3ee9.appspot.com",
+      messagingSenderId: "593568604435",
+      appId: "1:593568604435:web:9a5145457a8ee734143ae6"
+    };
+    
+    try {
+      const app = initializeApp(firebaseConfig);
+      const rtdb = getDatabase(app, "https://tracuu-d3ee9-default-rtdb.asia-southeast1.firebasedatabase.app");
+      const onlineCounterEl = document.getElementById('online-counter');
+      const connectionsRef = ref(rtdb, 'connections');
+      const myConnectionRef = push(connectionsRef);
+      onDisconnect(myConnectionRef).remove();
+      set(myConnectionRef, true);
+      onValue(connectionsRef, (snapshot) => {
+        const val = snapshot.val();
+        onlineCounterEl.textContent = val && typeof val === "object" ? Object.keys(val).length : 0;
+      });
+    } catch (err) {}
+
+    let uploadedLogoBase64 = "";
+    document.getElementById("logoUpload").addEventListener("change", (e) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => { uploadedLogoBase64 = ev.target.result; };
+      reader.readAsDataURL(e.target.files[0]);
+    });
+
+    document.getElementById("wifiForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const ssid = document.getElementById("ssid").value;
+      const password = document.getElementById("password").value;
+      const encryption = document.getElementById("encryption").value;
+      const orientation = document.querySelector('input[name="orientation"]:checked').value;
+
+      document.getElementById('empty-state').classList.add('hidden');
+      document.getElementById('result-container').classList.remove('hidden');
+      document.getElementById('result-container').classList.add('flex');
+      
+      const payload = `WIFI:T:${encryption};S:${ssid};P:${password};;`;
+      const wrapper = document.createElement("div");
+      new QRCode(wrapper, { text: payload, width: 300, height: 300, correctLevel: QRCode.CorrectLevel.H });
+      
+      setTimeout(() => {
+        const qrDataUrl = wrapper.querySelector("canvas").toDataURL("image/png");
+        const logo = uploadedLogoBase64 || '<i class="fa-solid fa-wifi text-indigo-600 text-6xl"></i>';
+        
+        document.getElementById('poster-render-area').innerHTML = `
+          <div id="capture-target" class="${orientation === 'horizontal' ? 'poster-horizontal' : 'poster-vertical'}">
+            <div class="poster-content">
+              <div class="poster-left">
+                <div class="poster-logo-container">${uploadedLogoBase64 ? `<img src="${uploadedLogoBase64}">` : '<i class="fa-solid fa-wifi text-indigo-600 text-5xl"></i>'}</div>
+                <h2 class="poster-title">QUÉT ĐỂ<br>KẾT NỐI WI-FI</h2>
+              </div>
+              <div class="poster-right">
+                <div class="qr-wrapper"><img src="${qrDataUrl}" width="160"></div>
+                <div class="wifi-details">
+                  <div class="wifi-row"><span class="wifi-label">Tên Wi-Fi</span><span class="wifi-val">${ssid}</span></div>
+                  <div class="wifi-row"><span class="wifi-label">Mật khẩu</span><span class="wifi-val text-highlight">${password || 'Miễn phí'}</span></div>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      }, 200);
+    });
+
+    document.getElementById("downloadBtn").addEventListener("click", async () => {
+      const target = document.getElementById("capture-target");
+      const canvas = await html2canvas(target, { scale: 2 });
+      const link = document.createElement("a");
+      link.href = canvas.toDataURL("image/png");
+      link.download = `WiFi_QR.png`;
+      link.click();
+    });
+
+    fetch('/menu.html')
+      .then(r => r.ok ? r.text() : "")
+      .then(h => {
+        if(h) document.getElementById('navbar-placeholder').innerHTML = h;
+      })
+      .catch(err => console.log('Lỗi tải menu:', err));
+  </script>
+</body>
+</html>

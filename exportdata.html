@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Tải Đề Cương Môn Học | Hệ Thống Tra Cứu</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Cấu hình màu thương hiệu #005625 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#005625',
+              light: '#007030', 
+              dark: '#003d1a',
+              soft: '#f8faf9',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Alpine.js (Hỗ trợ Navbar) -->
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- Google Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Thư viện Export & Math -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+
+  <style>
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background-color: #f1f5f9; 
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+    .text-sharp { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+
+    /* === CSS DÀNH ĐỘC QUYỀN CHO XUẤT PDF === */
+    @media print {
+      body { 
+        background-color: #fff !important; 
+        margin: 0; 
+        padding: 0; 
+        -webkit-print-color-adjust: exact; 
+        print-color-adjust: exact; 
+      }
+      #navbar-placeholder, #main-content, #export-loading, #msg-modal, #auth-loading { 
+        display: none !important; 
+      }
+      @page { 
+        margin: 15mm; 
+        size: A4 portrait; 
+      }
+    }
+  </style>
+</head>
+<body class="text-slate-900 min-h-screen flex flex-col overflow-x-hidden">
+
+  <!-- ===== MÀN HÌNH CHỜ XÁC THỰC (hiện mặc định, ẩn sau khi auth OK) ===== -->
+  <div id="auth-loading" class="fixed inset-0 z-[500] bg-white flex flex-col items-center justify-center gap-4">
+    <div class="w-16 h-16 rounded-full bg-brand/10 flex items-center justify-center">
+      <i class="fa-solid fa-circle-notch fa-spin text-brand text-3xl"></i>
+    </div>
+    <p class="text-xs font-black text-slate-500 uppercase tracking-widest animate-pulse">Đang xác thực quyền truy cập...</p>
+  </div>
+
+  <!-- Navbar Placeholder (70px height) -->
+  <header id="navbar-placeholder" class="fixed top-0 w-full z-[100] bg-white border-b border-slate-200 shadow-sm h-[70px]"></header>
+
+  <!-- Container hiển thị chính (ẩn cho đến khi xác thực xong) -->
+  <main id="main-content" class="hidden flex-grow container mx-auto px-4 pt-28 pb-16 max-w-5xl relative">
+    
+    <!-- Online Counter Pill -->
+    <div class="mb-8 flex justify-center">
+      <div class="inline-flex items-center gap-2 bg-white border border-slate-200 px-4 py-1.5 rounded-full shadow-sm text-xs font-bold text-slate-600">
+        <span class="relative flex h-2.5 w-2.5">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+        </span>
+        Hệ thống: <span id="online-counter" class="text-brand">0</span> người trực tuyến
+      </div>
+    </div>
+
+    <!-- Header Section -->
+    <div class="text-center mb-10">
+      <!-- Hiển thị tên người dùng đang đăng nhập -->
+      <div id="user-badge" class="inline-flex items-center gap-2 bg-brand/5 border border-brand/20 text-brand text-xs font-black px-4 py-1.5 rounded-full mb-4 uppercase tracking-widest">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span id="user-email">...</span>
+        <span class="text-slate-300">|</span>
+        <button id="logoutBtn" class="hover:text-red-500 transition-colors"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mb-2 uppercase text-sharp italic">XUẤT ĐỀ CƯƠNG MÔN HỌC</h1>
+      <p class="text-slate-500 text-base font-medium">Tải ngân hàng câu hỏi và đáp án để học tập ngoại tuyến.</p>
+    </div>
+
+    <!-- Danh sách môn học -->
+    <div class="bg-white rounded-[2rem] border border-slate-200 shadow-lg overflow-hidden">
+      <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+        <h2 class="font-black text-slate-700 flex items-center gap-2 uppercase text-xs tracking-widest">
+          <i class="fa-solid fa-folder-open text-brand"></i>
+          Kho dữ liệu môn học
+        </h2>
+        <span id="subject-count" class="text-xs font-black bg-brand text-white px-2.5 py-0.5 rounded-full shadow-md shadow-brand/10">0</span>
+      </div>
+      
+      <div id="subjectList" class="divide-y divide-slate-100 min-h-[250px]">
+        <div class="py-24 text-center text-slate-400">
+          <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3 text-brand"></i>
+          <p class="text-xs font-bold uppercase tracking-widest animate-pulse">Đang trích xuất danh sách...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overlay Loading Export -->
+    <div id="export-loading" class="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+      <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-in fade-in zoom-in duration-300">
+        <div class="w-16 h-16 bg-brand/10 text-brand rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+          <i class="fa-solid fa-file-export animate-bounce"></i>
+        </div>
+        <h3 class="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight">Đang xử lý tệp...</h3>
+        <p class="text-slate-500 text-sm mb-6 font-medium">Hệ thống đang chuẩn bị dữ liệu. Vui lòng chờ trong giây lát.</p>
+        <div id="loading-step" class="text-[10px] font-black text-brand uppercase tracking-[0.2em] bg-brand/5 py-1.5 rounded-full border border-brand/10">Khởi tạo dữ liệu</div>
+      </div>
+    </div>
+
+    <!-- Modal Thông báo -->
+    <div id="msg-modal" class="fixed inset-0 z-[210] hidden items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+        <div class="bg-white rounded-[2rem] shadow-2xl max-w-xs w-full p-8 text-center border-t-4 border-amber-500 animate-in fade-in slide-in-from-top-4 duration-300">
+            <div class="w-14 h-14 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+                <i class="fa-solid fa-circle-exclamation"></i>
+            </div>
+            <p id="msg-text" class="text-slate-700 font-bold text-sm mb-6 leading-relaxed"></p>
+            <button onclick="document.getElementById('msg-modal').classList.add('hidden')" class="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg active:scale-95">Đóng</button>
+        </div>
+    </div>
+  </main>
+
+  <!-- Container Ẩn Chuyên Dụng Để Kết Xuất PDF -->
+  <div id="print-area" class="hidden w-full bg-white text-black p-4"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getDatabase, ref, onValue, onDisconnect, set, push } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+    // ✅ THÊM MỚI: Import Auth modules (giống subject.html)
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+    // ==== FIREBASE CONFIG ====
+    const firebaseConfig = {
+      apiKey: "AIzaSyAjBMA-atKKvecY8CWeQXZsIQ3yHckZ92M",
+      authDomain: "tracuu-d3ee9.firebaseapp.com",
+      projectId: "tracuu-d3ee9",
+      storageBucket: "tracuu-d3ee9.appspot.com",
+      messagingSenderId: "593568604435",
+      appId: "1:593568604435:web:9a5145457a8ee734143ae6",
+      measurementId: "G-R0M6Y502NP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const rtdb = getDatabase(app, "https://tracuu-d3ee9-default-rtdb.asia-southeast1.firebasedatabase.app");
+
+    // ✅ THÊM MỚI: Kiểm soát quyền truy cập (giống hệt subject.html)
+    onAuthStateChanged(auth, (user) => {
+      const authLoading = document.getElementById("auth-loading");
+      const mainContent = document.getElementById("main-content");
+
+      if (!user) {
+        // Chưa đăng nhập → redirect về trang login
+        window.location.replace("ad.login.html");
+      } else {
+        // Đã xác thực → hiện nội dung, ẩn màn chờ
+        authLoading.classList.add("hidden");
+        mainContent.classList.remove("hidden");
+
+        // Hiển thị email người dùng đang đăng nhập
+        document.getElementById("user-email").textContent = user.email || "Admin";
+      }
+    });
+
+    // ✅ THÊM MỚI: Nút đăng xuất
+    document.getElementById("logoutBtn").onclick = () => {
+      signOut(auth).then(() => window.location.replace("ad.login.html"));
+    };
+
+    // ==== ONLINE COUNTER ====
+    const onlineCounterEl = document.getElementById('online-counter');
+    const connectionsRef = ref(rtdb, 'connections');
+    const myConnectionRef = push(connectionsRef);
+    onDisconnect(myConnectionRef).remove();
+    set(myConnectionRef, true);
+    onValue(connectionsRef, (s) => {
+      onlineCounterEl.textContent = s.exists() ? Object.keys(s.val()).length : 0;
+    });
+
+    // ==== UTILS ====
+    const stripHTML = (html) => {
+      if (!html) return "";
+      const n = document.createElement("div");
+      n.innerHTML = html;
+      return n.textContent?.trim() || "";
+    };
+
+    const getFirstWord = (html) => {
+      const text = stripHTML(html);
+      const preset = ["Đặt", "Cho", "Hàm"];
+      for (const t of preset) if (text.startsWith(t)) return t;
+      const first = text.split(/\s+/)[0];
+      return first || "";
+    };
+
+    const getAnswer = (q) => {
+      if (!q || !q.lua_chon || q.dap_an_dung === undefined) return "";
+      return q.lua_chon[String(q.dap_an_dung)] || "";
+    };
+
+    const showLoading = (step) => {
+      const el = document.getElementById('export-loading');
+      document.getElementById('loading-step').textContent = step;
+      el.classList.remove('hidden');
+      el.classList.add('flex');
+    };
+
+    const hideLoading = () => {
+      document.getElementById('export-loading').classList.add('hidden');
+      document.getElementById('export-loading').classList.remove('flex');
+    };
+
+    const showMessage = (text) => {
+        document.getElementById('msg-text').textContent = text;
+        document.getElementById('msg-modal').classList.remove('hidden');
+        document.getElementById('msg-modal').classList.add('flex');
+    }
+
+    // ==== EXPORT LOGIC ====
+    async function fetchData(subjectId) {
+      const q = query(collection(db, "cau_hoi"), where("mon_hoc_id", "==", subjectId));
+      const snap = await getDocs(q);
+      const data = snap.docs.map(doc => {
+        const item = doc.data();
+        return {
+          key: getFirstWord(item.noi_dung),
+          question: item.noi_dung || "",
+          answer: getAnswer(item)
+        };
+      });
+      return data.sort((a, b) => a.key.localeCompare(b.key, 'vi', { numeric: true }));
+    }
+
+    async function exportTXT(id, name) {
+      showLoading("Truy xuất dữ liệu...");
+      try {
+        const data = await fetchData(id);
+        if(!data.length) return showMessage("Môn học này hiện chưa có dữ liệu câu hỏi.");
+        
+        let content = `ĐỀ CƯƠNG MÔN HỌC: ${name.toUpperCase()}\n`;
+        content += `Hệ thống tra cứu học tập TVU & Tiện ích\n`;
+        content += `--------------------------------------------------\n\n`;
+        
+        data.forEach((item, index) => {
+          content += `Câu ${index + 1} [KEY: ${item.key}]\n`;
+          content += `Hỏi: ${stripHTML(item.question)}\n`;
+          content += `Đáp án: ${stripHTML(item.answer)}\n\n`;
+        });
+        
+        const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+        saveAs(blob, `DeCuong_${name.replace(/\s+/g, "_")}.txt`);
+      } catch (e) { showMessage("Đã xảy ra lỗi hệ thống."); }
+      finally { hideLoading(); }
+    }
+
+    async function exportXLSX(id, name) {
+      showLoading("Đang tạo bảng Excel...");
+      try {
+        const data = await fetchData(id);
+        if(!data.length) return showMessage("Môn học này hiện chưa có dữ liệu câu hỏi.");
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("De_Cuong");
+
+        worksheet.columns = [
+          { width: 8 },
+          { width: 15 },
+          { width: 70 },
+          { width: 40 }
+        ];
+
+        worksheet.addRow([`ĐỀ CƯƠNG MÔN: ${name.toUpperCase()}`]);
+        worksheet.mergeCells('A1:D1');
+        worksheet.getRow(1).font = { bold: true, size: 14 };
+        worksheet.getRow(1).alignment = { horizontal: 'center', vertical: 'middle' };
+        worksheet.getRow(1).height = 30;
+        
+        worksheet.addRow(['STT', 'KEY', 'Câu Hỏi', 'Đáp Án Đúng']);
+        const headerRow = worksheet.getRow(2);
+        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        headerRow.eachCell(cell => {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF005625' } };
+          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+          cell.border = {
+            top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}
+          };
+        });
+
+        data.forEach((item, idx) => {
+          const row = worksheet.addRow([idx + 1, item.key, stripHTML(item.question), stripHTML(item.answer)]);
+          row.alignment = { vertical: 'top', wrapText: true };
+          row.eachCell(cell => {
+             cell.border = {
+               top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}
+             };
+          });
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(blob, `DeCuong_${name.replace(/\s+/g, "_")}.xlsx`);
+      } catch (e) { showMessage("Lỗi xuất file Excel."); }
+      finally { hideLoading(); }
+    }
+
+    async function exportPDF(id, name) {
+      showLoading("Đang chuẩn bị trang in...");
+      try {
+        const data = await fetchData(id);
+        if(!data.length) return showMessage("Môn học này hiện chưa có dữ liệu câu hỏi.");
+
+        const printArea = document.getElementById("print-area");
+        
+        let rows = data.map((item, idx) => `
+          <tr style="page-break-inside: avoid; break-inside: avoid;">
+            <td style="border: 1px solid #000; padding: 10px; text-align:center; vertical-align: top;">${idx + 1}</td>
+            <td style="border: 1px solid #000; padding: 10px; text-align:center; font-weight:bold; vertical-align: top;">${item.key}</td>
+            <td style="border: 1px solid #000; padding: 10px; vertical-align: top; word-break: break-word;">${item.question}</td>
+            <td style="border: 1px solid #000; padding: 10px; vertical-align: top; word-break: break-word;">${item.answer}</td>
+          </tr>
+        `).join("");
+
+        printArea.innerHTML = `
+          <div style="text-align:center; margin-bottom:20px; font-family: 'Times New Roman', serif;">
+            <h1 style="font-size:24px; font-weight:bold; color:#000; margin:0; text-transform:uppercase;">ĐỀ CƯƠNG MÔN: ${name}</h1>
+            <p style="font-size:14px; color:#555; margin-top:5px;">Hệ thống tra cứu học tập TVU</p>
+          </div>
+          <table style="width: 100%; border-collapse: collapse; font-family: 'Times New Roman', serif; font-size: 14pt;">
+            <thead style="display: table-header-group;">
+              <tr style="background-color: #f0f0f0;">
+                <th style="border: 1px solid #000; padding: 10px; width: 45px; text-align: center;">STT</th>
+                <th style="border: 1px solid #000; padding: 10px; width: 80px; text-align: center;">KEY</th>
+                <th style="border: 1px solid #000; padding: 10px; text-align: center;">CÂU HỎI</th>
+                <th style="border: 1px solid #000; padding: 10px; width: 180px; text-align: center;">ĐÁP ÁN</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `;
+        
+        document.getElementById('main-content').classList.add('hidden');
+        printArea.classList.remove('hidden');
+
+        renderMathInElement(printArea, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+          ],
+          throwOnError: false
+        });
+
+        await new Promise(r => setTimeout(r, 800));
+        hideLoading();
+
+        window.print();
+
+        printArea.classList.add('hidden');
+        document.getElementById('main-content').classList.remove('hidden');
+
+      } catch (e) { 
+        hideLoading();
+        showMessage("Lỗi tạo tệp PDF."); 
+      }
+    }
+
+    // ==== INITIAL LOAD ====
+    async function loadSubjects() {
+      const container = document.getElementById("subjectList");
+      try {
+        const snap = await getDocs(collection(db, "mon_hoc"));
+        const subjects = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        subjects.sort((a, b) => (a.ten_mon || "").localeCompare(b.ten_mon || "", 'vi'));
+        document.getElementById('subject-count').textContent = subjects.length;
+
+        if (!subjects.length) {
+          container.innerHTML = `<div class="py-12 text-center text-slate-400 font-bold uppercase italic tracking-widest">Chưa có môn học nào</div>`;
+          return;
+        }
+
+        container.innerHTML = "";
+        subjects.forEach(s => {
+          const name = s.ten_mon || s.id;
+          const row = document.createElement("div");
+          row.className = "flex flex-col sm:flex-row sm:items-center justify-between p-5 hover:bg-slate-50 transition-all group border-l-4 border-transparent hover:border-brand";
+          row.innerHTML = `
+            <div class="flex items-center gap-4 mb-4 sm:mb-0">
+              <span class="font-black text-slate-700 text-sm sm:text-base tracking-tight uppercase group-hover:text-brand transition-colors">${name}</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button class="txt px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-black hover:bg-slate-200 transition-all uppercase tracking-widest shadow-sm">📝 TXT</button>
+              <button class="xlsx px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-black hover:bg-emerald-600 hover:text-white transition-all uppercase tracking-widest shadow-sm">📊 EXCEL</button>
+              <button class="pdf px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-black hover:bg-indigo-600 hover:text-white transition-all uppercase tracking-widest shadow-sm">📄 PDF</button>
+            </div>
+          `;
+          row.querySelector('.txt').onclick = () => exportTXT(s.id, name);
+          row.querySelector('.xlsx').onclick = () => exportXLSX(s.id, name);
+          row.querySelector('.pdf').onclick = () => exportPDF(s.id, name);
+          container.appendChild(row);
+        });
+      } catch (err) {
+        container.innerHTML = `<div class="py-12 text-center text-red-500 font-black uppercase text-xs tracking-widest animate-bounce">⚠️ Lỗi kết nối CSDL</div>`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // loadSubjects() chỉ chạy sau khi onAuthStateChanged xác nhận user hợp lệ
+      // nên gọi nó bên trong auth callback ở trên sẽ đảm bảo hơn.
+      // Tuy nhiên DOMContentLoaded vẫn an toàn vì main-content đang bị ẩn.
+      loadSubjects();
+      fetch('/menu.html').then(r => r.ok ? r.text() : "").then(h => { if(h) document.getElementById('navbar-placeholder').innerHTML = h; });
+    });
+  </script>
+</body>
+</html>

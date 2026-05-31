@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <title>Trợ Lý Tiếng Anh AI PRO | Hệ Thống Tra Cứu</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Cấu hình màu thương hiệu #005625 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#005625',
+              light: '#007030', 
+              dark: '#003d1a',
+              soft: '#f8faf9',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Google Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Thư viện client-side cho OCR -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  <style>
+    body { font-family: "Inter", sans-serif; background: #f1f5f9; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+    
+    /* Tuỳ chỉnh thanh cuộn */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Hiệu ứng focus chung */
+    .focus-ring:focus-within { border-color: #005625; box-shadow: 0 0 0 4px rgba(0,86,37,0.1); }
+    
+    .text-sharp { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+    
+    /* Animation Fade In */
+    .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="text-slate-900 min-h-screen flex flex-col">
+
+  <!-- Navbar Placeholder -->
+  <header id="navbar-placeholder" class="fixed top-0 w-full z-[100] bg-white border-b border-slate-200 shadow-sm h-[70px]"></header>
+
+  <main class="container mx-auto px-4 pt-28 pb-16 max-w-5xl flex-grow">
+    
+    <!-- Online Counter -->
+    <div class="mb-6 flex justify-center">
+      <div class="inline-flex items-center gap-2 bg-white border border-slate-200 px-4 py-1.5 rounded-full shadow-sm text-xs font-bold text-slate-600">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        Hệ thống AI: <span id="online-counter" class="text-brand text-sm ml-1 font-black">0</span> <span class="text-brand text-sm">đang online</span>
+      </div>
+    </div>
+
+    <!-- Header Section -->
+    <div class="text-center mb-10 fade-in">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-[1.5rem] bg-brand/10 text-brand text-3xl mb-4 shadow-inner">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-black text-slate-900 uppercase tracking-tight italic text-sharp">English AI PRO</h1>
+      <p class="text-slate-500 font-medium mt-2 max-w-xl mx-auto">Trợ lý ảo giải đáp tiếng Anh hỗ trợ đa phương thức: Văn bản, Hình ảnh (OCR) & Âm thanh (Whisper AI).</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start fade-in" style="animation-delay: 0.1s;">
+      
+      <!-- CỘT TRÁI: NHẬP LIỆU -->
+      <div class="lg:col-span-7 space-y-6">
+        
+        <!-- Khối 1: Câu hỏi -->
+        <div class="bg-white rounded-[2rem] shadow-xl border border-slate-200 p-6 sm:p-8 transition-all focus-ring">
+          <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+            <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
+              <i class="fa-solid fa-keyboard text-brand"></i> Nội Dung Câu Hỏi
+            </h2>
+            <span id="ocrStatus" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-1 rounded-md hidden">Đang chờ OCR...</span>
+          </div>
+          
+          <textarea id="question" class="w-full h-32 bg-slate-50 border border-slate-200 rounded-2xl p-5 outline-none font-medium text-slate-700 text-sm sm:text-base resize-none custom-scrollbar mb-4 placeholder-slate-400" placeholder="Nhập câu hỏi tiếng Anh vào đây, hoặc dán ảnh (Ctrl+V) để hệ thống tự động nhận diện chữ..."></textarea>
+          
+          <!-- Thanh công cụ nhập liệu -->
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- Nút Upload Ảnh -->
+            <label class="px-5 py-2.5 bg-slate-100 text-slate-600 font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-slate-200 hover:text-brand cursor-pointer transition-all flex items-center gap-2 border border-slate-200">
+              <i class="fa-solid fa-image"></i> Chọn Ảnh
+              <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="readImage()">
+            </label>
+            
+            <!-- Nút Voice -->
+            <button onclick="startVoice()" id="voiceBtn" class="px-5 py-2.5 bg-slate-100 text-slate-600 font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-red-50 hover:text-red-500 cursor-pointer transition-all flex items-center gap-2 border border-slate-200">
+              <i class="fa-solid fa-microphone"></i> Giọng Nói
+            </button>
+            
+            <span id="voiceStatus" class="text-[10px] font-black text-red-500 uppercase tracking-widest ml-auto hidden animate-pulse">
+               <i class="fa-solid fa-record-vinyl mr-1"></i> Đang nghe...
+            </span>
+          </div>
+        </div>
+
+        <!-- Khối 2: Bối cảnh âm thanh (Audio Context) -->
+        <div class="bg-white rounded-[2rem] shadow-xl border border-slate-200 p-6 sm:p-8">
+          <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+            <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
+              <i class="fa-solid fa-headphones text-indigo-500"></i> Bối Cảnh Audio (Listening)
+            </h2>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-1 rounded-md">Tùy chọn</span>
+          </div>
+          
+          <div class="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-5 mb-4">
+            <input type="file" id="audio" accept="audio/*" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer transition-all">
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3 mb-4">
+            <button onclick="convertAudio()" id="convertAudioBtn" class="flex-1 sm:flex-none px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[10px] uppercase tracking-widest rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2">
+              <i class="fa-solid fa-language"></i> Trích xuất văn bản
+            </button>
+            <button onclick="toggleAudioText()" class="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all border border-slate-200" title="Ẩn/Hiện văn bản">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+            <button onclick="clearAudio()" class="px-4 py-3 bg-red-50 hover:bg-red-100 text-red-500 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all border border-red-100" title="Xóa Audio">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+          
+          <div id="audioStatusBox" class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+             <i class="fa-solid fa-circle-info text-indigo-400"></i> <span id="audioStatus">Chưa tải âm thanh</span>
+          </div>
+
+          <!-- Preview Văn bản âm thanh -->
+          <div id="audioPreview" class="hidden mt-4 p-4 bg-slate-800 text-slate-300 font-mono text-xs rounded-xl max-h-48 overflow-y-auto custom-scrollbar shadow-inner leading-relaxed"></div>
+        </div>
+
+      </div>
+
+      <!-- CỘT PHẢI: XỬ LÝ & KẾT QUẢ -->
+      <div class="lg:col-span-5 flex flex-col gap-6">
+        
+        <!-- Nút Solve Lớn -->
+        <button onclick="solve()" id="solveBtn" class="w-full py-5 bg-brand hover:bg-brand-light text-white font-black rounded-[2rem] shadow-xl shadow-brand/30 transition-all hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-3 uppercase text-sm sm:text-base tracking-[0.2em] group border-b-4 border-brand-dark active:border-b-0">
+          <i class="fa-solid fa-bolt text-xl group-hover:scale-125 transition-transform"></i>
+          GIẢI ĐÁP NGAY
+        </button>
+
+        <!-- Khối Kết Quả -->
+        <div class="bg-white rounded-[2rem] shadow-xl border border-slate-200 p-6 sm:p-8 flex-grow flex flex-col">
+          <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 pb-3 mb-4">
+            <i class="fa-solid fa-check-double text-emerald-500"></i> AI Trả Lời
+          </h2>
+          
+          <div id="result" class="flex-grow bg-slate-50 border border-slate-200 rounded-2xl p-5 text-sm sm:text-base font-medium text-slate-700 leading-relaxed whitespace-pre-wrap overflow-y-auto custom-scrollbar min-h-[250px]">
+            <div class="h-full flex flex-col items-center justify-center text-slate-400 opacity-60">
+                <i class="fa-solid fa-robot text-4xl mb-3"></i>
+                <span class="text-xs font-bold uppercase tracking-widest">Đợi câu hỏi từ bạn...</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, push, onValue, onDisconnect, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    // ==== FIREBASE CONFIG & ĐẾM NGƯỜI ONLINE ====
+    const firebaseConfig = {
+      apiKey: "AIzaSyAjBMA-atKKvecY8CWeQXZsIQ3yHckZ92M",
+      authDomain: "tracuu-d3ee9.firebaseapp.com",
+      databaseURL: "https://tracuu-d3ee9-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "tracuu-d3ee9",
+      storageBucket: "tracuu-d3ee9.appspot.com",
+      messagingSenderId: "593568604435",
+      appId: "1:593568604435:web:9a5145457a8ee734143ae6"
+    };
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const rtdb = getDatabase(app);
+      const onlineCounterEl = document.getElementById('online-counter');
+      if (onlineCounterEl) {
+        const connectionsRef = ref(rtdb, 'connections');
+        const myConnectionRef = push(connectionsRef);
+        onDisconnect(myConnectionRef).remove();
+        set(myConnectionRef, true);
+        onValue(connectionsRef, (snapshot) => {
+          const val = snapshot.val();
+          onlineCounterEl.textContent = val && typeof val === "object" ? Object.keys(val).length : 0;
+        });
+      }
+    } catch (err) {
+      console.warn("Lỗi kết nối Firebase Counter:", err);
+    }
+
+    // Cấu hình lưu cache model AI trên trình duyệt
+    env.useBrowserCache = true;
+
+    let transcriber = null;
+    let audioText = "";
+
+    const questionEl = document.getElementById("question");
+    const resultEl = document.getElementById("result");
+    const audioStatusEl = document.getElementById("audioStatus");
+    const ocrStatusEl = document.getElementById("ocrStatus");
+    const solveBtn = document.getElementById("solveBtn");
+
+    // ================= AI CALL (Sử dụng Pollinations như gốc) =================
+    async function callAI(prompt){
+      let url = "https://text.pollinations.ai/" + encodeURIComponent(prompt);
+      let res = await fetch(url);
+      return await res.text();
+    }
+
+    // ================= XỬ LÝ GIẢI ĐÁP (SOLVE) =================
+    window.solve = async function() {
+      let questionText = questionEl.value.trim();
+
+      if (!questionText) {
+        alert("Vui lòng nhập câu hỏi trước khi giải đáp!");
+        questionEl.focus();
+        return;
+      }
+
+      // Trạng thái Loading
+      solveBtn.disabled = true;
+      solveBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-xl"></i> ĐANG SUY NGHĨ...';
+      solveBtn.classList.add("opacity-80");
+      resultEl.innerHTML = `
+        <div class="h-full flex flex-col items-center justify-center text-brand">
+            <i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i>
+            <span class="text-[10px] font-black uppercase tracking-widest animate-pulse">AI đang phân tích dữ liệu...</span>
+        </div>
+      `;
+
+      let finalPrompt;
+
+      if (audioText.trim() !== "") {
+        finalPrompt = `
+Use this audio transcript as context/reference:
+
+"${audioText}"
+
+Now answer the following question based on the context above (if relevant) or general knowledge.
+Question: 
+"${questionText}"
+
+Explain your answer clearly.
+`;
+      } else {
+        finalPrompt = `
+Please solve and explain clearly the following English question:
+
+"${questionText}"
+`;
+      }
+
+      try {
+        let answer = await callAI(finalPrompt);
+        resultEl.innerText = answer;
+      } catch (err) {
+        resultEl.innerHTML = `<span class="text-red-500 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi kết nối đến máy chủ AI. Vui lòng thử lại.</span>`;
+      } finally {
+        solveBtn.disabled = false;
+        solveBtn.innerHTML = '<i class="fa-solid fa-bolt text-xl"></i> GIẢI ĐÁP NGAY';
+        solveBtn.classList.remove("opacity-80");
+      }
+    }
+
+    // ================= OCR (TESSERACT) =================
+    window.readImage = function() {
+      let file = document.getElementById("imageInput").files[0];
+      if (!file) return;
+      processOCR(file);
+    }
+
+    // Dán ảnh trực tiếp bằng Ctrl+V
+    questionEl.addEventListener("paste", function(event) {
+      let items = (event.clipboardData || event.originalEvent.clipboardData).items;
+      for (let item of items) {
+        if (item.type.indexOf("image") !== -1) {
+          event.preventDefault(); // Ngăn hành vi dán mặc định nếu là ảnh
+          let file = item.getAsFile();
+          processOCR(file);
+        }
+      }
+    });
+
+    function processOCR(file) {
+      ocrStatusEl.style.display = 'inline-block';
+      ocrStatusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang quét...';
+      ocrStatusEl.className = "text-[10px] font-bold text-brand uppercase tracking-widest bg-brand/10 px-2 py-1 rounded-md inline-block";
+
+      Tesseract.recognize(file, 'eng', {
+        logger: m => {
+            if (m.status === 'recognizing text') {
+                ocrStatusEl.innerText = `OCR: ${Math.round(m.progress * 100)}%`;
+            }
+        }
+      })
+      .then(({ data: { text } }) => {
+        const currentText = questionEl.value;
+        // Ghép text mới vào nếu đã có sẵn nội dung
+        questionEl.value = currentText ? currentText + "\n" + text : text; 
+        
+        ocrStatusEl.innerHTML = '<i class="fa-solid fa-check"></i> Hoàn tất';
+        ocrStatusEl.className = "text-[10px] font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded-md inline-block";
+        setTimeout(() => { ocrStatusEl.style.display = 'none'; }, 3000);
+      })
+      .catch(err => {
+        ocrStatusEl.innerHTML = '<i class="fa-solid fa-xmark"></i> Lỗi OCR';
+        ocrStatusEl.className = "text-[10px] font-bold text-red-600 uppercase tracking-widest bg-red-50 px-2 py-1 rounded-md inline-block";
+      });
+    }
+
+    // ================= GIỌNG NÓI (VOICE) =================
+    window.startVoice = function() {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRec) {
+        alert("Trình duyệt của bạn không hỗ trợ nhận diện giọng nói. Vui lòng dùng Chrome.");
+        return;
+      }
+      
+      let recognition = new SpeechRec();
+      recognition.lang = "en-US"; // Mặc định tiếng Anh
+      
+      const voiceStatus = document.getElementById("voiceStatus");
+      const voiceBtn = document.getElementById("voiceBtn");
+
+      recognition.onstart = function() {
+        voiceStatus.style.display = 'inline-block';
+        voiceBtn.classList.add('bg-red-50', 'text-red-500', 'border-red-200');
+      };
+
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        const currentText = questionEl.value;
+        questionEl.value = currentText ? currentText + " " + transcript : transcript;
+      };
+
+      recognition.onend = function() {
+        voiceStatus.style.display = 'none';
+        voiceBtn.classList.remove('bg-red-50', 'text-red-500', 'border-red-200');
+      };
+
+      recognition.start();
+    }
+
+    // ================= WHISPER AI (LOCAL AUDIO TO TEXT) =================
+    async function loadWhisper() {
+      if (transcriber) return;
+      audioStatusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-indigo-500"></i> Đang tải Model Whisper AI (Chỉ tải lần đầu)...';
+      try {
+        transcriber = await pipeline("automatic-speech-recognition", "Xenova/whisper-base.en");
+        audioStatusEl.innerHTML = '<i class="fa-solid fa-check text-emerald-500"></i> Model Whisper Sẵn Sàng';
+      } catch (err) {
+        audioStatusEl.innerHTML = '<i class="fa-solid fa-xmark text-red-500"></i> Lỗi tải Model AI';
+        throw err;
+      }
+    }
+
+    async function decodeAudio(file) {
+      const ctx = new AudioContext();
+      const buffer = await file.arrayBuffer();
+      const audioBuffer = await ctx.decodeAudioData(buffer);
+
+      const input = audioBuffer.getChannelData(0);
+      const inputRate = audioBuffer.sampleRate;
+      const targetRate = 16000; // Whisper yêu cầu 16kHz
+
+      if (inputRate === targetRate) {
+        ctx.close();
+        return input;
+      }
+
+      // Resample
+      const ratio = inputRate / targetRate;
+      const newLength = Math.round(input.length / ratio);
+      const output = new Float32Array(newLength);
+
+      for (let i = 0; i < newLength; i++) {
+        output[i] = input[Math.floor(i * ratio)];
+      }
+
+      ctx.close();
+      return output;
+    }
+
+    window.convertAudio = async function() {
+      const file = document.getElementById("audio").files[0];
+      if (!file) {
+        alert("Vui lòng chọn file âm thanh trước!");
+        return;
+      }
+
+      const btn = document.getElementById("convertAudioBtn");
+      btn.disabled = true;
+      btn.classList.add("opacity-50");
+
+      try {
+        await loadWhisper();
+        
+        audioStatusEl.innerHTML = '<i class="fa-solid fa-gears text-indigo-500 fa-spin"></i> Đang xử lý âm thanh... (Vui lòng đợi)';
+        
+        const audioData = await decodeAudio(file);
+        const result = await transcriber(audioData, {
+          chunk_length_s: 20,
+          stride_length_s: 3,
+          return_timestamps: false
+        });
+
+        audioText = result.text;
+        document.getElementById("audioPreview").innerText = audioText;
+        audioStatusEl.innerHTML = '<span class="text-emerald-600"><i class="fa-solid fa-circle-check"></i> Đã trích xuất thành công!</span>';
+        
+        // Tự động bật box preview để user thấy kết quả
+        document.getElementById("audioPreview").style.display = "block";
+      } catch (err) {
+        console.error(err);
+        audioStatusEl.innerHTML = '<span class="text-red-500"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi xử lý âm thanh!</span>';
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove("opacity-50");
+      }
+    }
+
+    window.clearAudio = function() {
+      audioText = "";
+      document.getElementById("audio").value = "";
+      document.getElementById("audioPreview").innerText = "";
+      document.getElementById("audioPreview").style.display = "none";
+      audioStatusEl.innerHTML = 'Đã xóa dữ liệu âm thanh.';
+    }
+
+    window.toggleAudioText = function() {
+      let box = document.getElementById("audioPreview");
+      if (box.style.display === "none" || box.classList.contains("hidden")) {
+        box.classList.remove("hidden");
+        box.style.display = "block";
+      } else {
+        box.style.display = "none";
+      }
+    }
+
+    // Load Navbar
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch('/menu.html')
+        .then(r => r.ok ? r.text() : "")
+        .then(h => { if(h) document.getElementById('navbar-placeholder').innerHTML = h; })
+        .catch(err => console.warn("Lỗi nạp menu:", err));
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản Trị Bảng Tin | Hệ Thống Tra Cứu</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Cấu hình màu thương hiệu #005625 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            DEFAULT: '#005625',
+                            light: '#007030', 
+                            dark: '#003d1a',
+                            soft: '#f8faf9',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Quill Editor & Emoji -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill-emoji@0.2.0/dist/quill-emoji.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/quill-emoji@0.2.0/dist/quill-emoji.css" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; -webkit-font-smoothing: antialiased; }
+        
+        /* Tuỳ chỉnh Quill Editor */
+        .quill-container { border: 1px solid #e2e8f0; border-radius: 1rem; background: #fff; overflow: hidden; transition: all 0.2s; }
+        .quill-container:focus-within { border-color: #005625; box-shadow: 0 0 0 4px rgba(0, 86, 37, 0.1); }
+        .ql-toolbar.ql-snow { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
+        .ql-container.ql-snow { border: none; }
+        .ql-editor { min-height: 300px; max-height: 500px; font-size: 0.95rem; line-height: 1.7; color: #334155; }
+
+        /* Toast Animation */
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast-enter { animation: slideInRight 0.3s ease-out forwards; }
+        
+        .text-sharp { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+    </style>
+</head>
+<body class="text-slate-900 min-h-screen flex flex-col overflow-x-hidden">
+
+    <!-- Navbar Placeholder -->
+    <header id="navbar-placeholder" class="fixed top-0 w-full z-50 bg-white border-b border-slate-200 shadow-sm h-[70px]"></header>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-24 right-4 z-[100] flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Main View (Admin Dashboard) -->
+    <div id="admin-view" class="flex-grow flex flex-col pt-24 pb-12">
+        <main class="container mx-auto px-4 max-w-5xl relative">
+            
+            <!-- Admin Header -->
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic">Quản Trị Bảng Tin</h1>
+                    <p class="text-slate-500 text-sm">Đăng tải thông báo và quản lý danh mục tin tức.</p>
+                </div>
+                <button id="logoutBtn" class="px-5 py-2 bg-red-50 text-red-600 rounded-xl text-xs font-black hover:bg-red-600 hover:text-white transition-all flex items-center gap-2 text-sharp shadow-sm">
+                    <i class="fa-solid fa-power-off"></i> ĐĂNG XUẤT
+                </button>
+            </div>
+
+            <!-- Statistic Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Người dùng trực tuyến</p>
+                        <p class="text-3xl font-black text-emerald-600" id="online-counter">0</p>
+                    </div>
+                    <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-2xl shadow-inner">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                </div>
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tổng số thông báo</p>
+                        <p class="text-3xl font-black text-brand" id="total-announcements">0</p>
+                    </div>
+                    <div class="w-14 h-14 rounded-2xl bg-brand/5 text-brand flex items-center justify-center text-2xl shadow-inner">
+                        <i class="fa-solid fa-bullhorn"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <div class="flex p-1 bg-slate-200 rounded-2xl mb-8 max-w-lg mx-auto sm:mx-0">
+                <button onclick="switchTab('list')" data-tab="list" class="tab-btn flex-1 py-2.5 text-[10px] font-black uppercase rounded-xl transition-all tracking-widest bg-white shadow-sm text-brand">
+                    Danh Sách
+                </button>
+                <button onclick="switchTab('form')" data-tab="form" class="tab-btn flex-1 py-2.5 text-[10px] font-black uppercase rounded-xl transition-all tracking-widest text-slate-500 hover:text-slate-700">
+                    Thêm / Sửa
+                </button>
+                <button onclick="switchTab('categories')" data-tab="categories" class="tab-btn flex-1 py-2.5 text-[10px] font-black uppercase rounded-xl transition-all tracking-widest text-slate-500 hover:text-slate-700">
+                    Danh Mục
+                </button>
+            </div>
+
+            <!-- Tab Content: Danh sách -->
+            <div id="tab-list" class="tab-content animate-in fade-in duration-500 space-y-4">
+                <div id="announcements-list">
+                    <div class="py-20 text-center text-slate-400 bg-white rounded-3xl border border-slate-200 shadow-sm italic">
+                        <i class="fa-solid fa-circle-notch fa-spin text-2xl mb-3 text-brand"></i>
+                        <p class="text-xs font-bold uppercase tracking-widest">Đang nạp dữ liệu bảng tin...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Form thêm/sửa -->
+            <div id="tab-form" class="tab-content hidden animate-in slide-in-from-right-4 duration-500">
+                <div class="bg-white rounded-[2rem] shadow-xl border border-slate-200 overflow-hidden max-w-4xl mx-auto">
+                    <div class="px-8 py-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                        <h2 id="form-title" class="font-black text-slate-800 uppercase italic tracking-wide">Đăng thông báo mới</h2>
+                    </div>
+                    <div class="p-8">
+                        <form id="announcement-form" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div class="md:col-span-2">
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tiêu đề bản tin</label>
+                                    <input id="input-title" type="text" class="block w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-brand/10 focus:border-brand outline-none font-bold text-sm transition-all shadow-inner" placeholder="Nhập tiêu đề..." required>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Danh mục</label>
+                                    <select id="input-category" class="block w-full px-5 py-3.5 bg-brand/5 border border-brand/20 rounded-2xl font-black text-brand text-xs uppercase cursor-pointer focus:ring-4 focus:ring-brand/10 outline-none transition-all" required>
+                                        <option value="" disabled selected>Đang tải...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nội dung chi tiết</label>
+                                <div class="quill-container">
+                                    <div id="editor"></div>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-4 pt-4 border-t border-slate-100">
+                                <button id="submit-btn" type="submit" class="flex-1 py-4 bg-brand hover:bg-brand-light text-white font-black rounded-2xl shadow-xl shadow-brand/20 transition-all hover:-translate-y-1 active:scale-95 uppercase text-xs tracking-[0.2em]">
+                                    <i class="fa-solid fa-paper-plane mr-2"></i> <span>Xuất Bản Ngay</span>
+                                </button>
+                                <button id="cancel-edit-btn" type="button" class="hidden px-8 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black rounded-2xl transition-all uppercase text-xs tracking-widest">
+                                    Hủy bỏ
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Quản lý Danh mục -->
+            <div id="tab-categories" class="tab-content hidden animate-in slide-in-from-left-4 duration-500 space-y-6">
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 max-w-4xl mx-auto">
+                    <h3 class="text-sm font-black text-slate-800 mb-6 uppercase tracking-widest flex items-center gap-2"><i class="fa-solid fa-plus-circle text-brand"></i> Tạo danh mục mới</h3>
+                    <form id="category-form" class="flex flex-col sm:flex-row gap-4">
+                        <input type="text" id="input-new-category" class="flex-1 px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-brand/10 focus:border-brand outline-none font-bold text-sm shadow-inner" placeholder="Tên danh mục (VD: Lịch thi học kỳ)" required>
+                        <button type="submit" class="px-10 py-3.5 bg-brand text-white font-black rounded-2xl shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all uppercase text-[10px] tracking-widest hover:bg-brand-light">Thêm</button>
+                    </form>
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 max-w-4xl mx-auto">
+                    <h3 class="text-sm font-black text-slate-800 mb-6 uppercase tracking-widest flex items-center gap-2"><i class="fa-solid fa-list text-brand"></i> Danh sách danh mục</h3>
+                    <div id="categories-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Categories render here -->
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- SCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, updateDoc, serverTimestamp, onSnapshot, query, orderBy, doc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, push, onDisconnect, set, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        // Logic Vanilla JS thay thế AlpineJS cho việc chuyển Tabs
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                if (btn.dataset.tab === tabId) {
+                    btn.className = "tab-btn flex-1 py-2.5 text-[10px] font-black uppercase rounded-xl transition-all tracking-widest bg-white shadow-sm text-brand";
+                } else {
+                    btn.className = "tab-btn flex-1 py-2.5 text-[10px] font-black uppercase rounded-xl transition-all tracking-widest text-slate-500 hover:text-slate-700";
+                }
+            });
+        };
+
+        // ==========================================
+        // 1. CẤU HÌNH & KHỞI TẠO FIREBASE
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjBMA-atKKvecY8CWeQXZsIQ3yHckZ92M",
+            authDomain: "tracuu-d3ee9.firebaseapp.com",
+            databaseURL: "https://tracuu-d3ee9-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "tracuu-d3ee9",
+            storageBucket: "tracuu-d3ee9.appspot.com",
+            messagingSenderId: "593568604435",
+            appId: "1:593568604435:web:9a5145457a8ee734143ae6",
+            measurementId: "G-R0M6Y502NP"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const rtdb = getDatabase(app, firebaseConfig.databaseURL);
+
+        // ==========================================
+        // 2. TRẠNG THÁI & TIỆN ÍCH
+        // ==========================================
+        const State = {
+            announcements: new Map(),
+            categories: new Map(),
+            editingId: null,
+            quillInstance: null,
+        };
+
+        const Utils = {
+            stripHtml: (html) => {
+                const tmp = document.createElement("DIV");
+                tmp.innerHTML = html;
+                return tmp.textContent || tmp.innerText || "";
+            },
+            formatDate: (timestamp) => {
+                if (!timestamp) return 'Đang cập nhật...';
+                return timestamp.toDate().toLocaleString('vi-VN');
+            },
+            getCategoryBadge: (category) => {
+                const styles = {
+                    'Quan Trọng': 'bg-red-50 text-red-600 border-red-200',
+                    'Lịch Học': 'bg-blue-50 text-blue-600 border-blue-200',
+                    'Sự Kiện': 'bg-amber-50 text-amber-600 border-amber-200',
+                    'Tin Tức': 'bg-purple-50 text-purple-600 border-purple-200'
+                };
+                const style = styles[category] || 'bg-brand/5 text-brand border-brand/10';
+                return `<span class="px-2.5 py-1 text-[10px] font-black rounded-md border uppercase tracking-wider ${style}">${category}</span>`;
+            },
+            showToast: (message, type = 'success') => {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                const isSuccess = type === 'success';
+                const icon = isSuccess ? '<i class="fa-solid fa-circle-check text-emerald-500"></i>' : '<i class="fa-solid fa-circle-exclamation text-red-500"></i>';
+                
+                toast.className = `toast-enter flex items-center gap-3 bg-white px-5 py-4 rounded-2xl shadow-2xl border-l-4 ${isSuccess ? 'border-emerald-500' : 'border-red-500'} pointer-events-auto min-w-[320px]`;
+                toast.innerHTML = `${icon} <span class="text-sm font-bold text-slate-700">${message}</span>`;
+                
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(100%)';
+                    toast.style.transition = 'all 0.4s ease-in';
+                    setTimeout(() => toast.remove(), 400);
+                }, 3500);
+            }
+        };
+
+        // ==========================================
+        // 3. UI CONTROLLER
+        // ==========================================
+        const ViewCtrl = {
+            initQuill() {
+                Quill.register('modules/emoji', QuillEmoji);
+                const toolbarOptions = [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    ['link', 'image', 'video'],
+                    ['emoji'],
+                    ['clean']
+                ];
+                State.quillInstance = new Quill('#editor', {
+                    theme: 'snow',
+                    placeholder: 'Bắt đầu soạn thảo nội dung thông báo...',
+                    modules: { toolbar: toolbarOptions, 'emoji-toolbar': true, 'emoji-shortname': true }
+                });
+            },
+
+            resetForm() {
+                document.getElementById("announcement-form").reset();
+                State.quillInstance.setText('');
+                State.editingId = null;
+                document.getElementById("form-title").textContent = 'Đăng thông báo mới';
+                const submitBtn = document.getElementById("submit-btn");
+                submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> <span>Xuất Bản Ngay</span>';
+                submitBtn.className = "flex-1 py-4 bg-brand hover:bg-brand-light text-white font-black rounded-2xl shadow-xl shadow-brand/20 transition-all uppercase text-xs tracking-widest";
+                document.getElementById("cancel-edit-btn").classList.add("hidden");
+                this.updateCategoryDropdown();
+            },
+
+            loadFormForEdit(id) {
+                const data = State.announcements.get(id);
+                if (!data) return;
+                State.editingId = id;
+                document.getElementById("input-title").value = data.title;
+                State.quillInstance.root.innerHTML = data.content;
+                document.getElementById("input-category").value = data.category;
+                document.getElementById("form-title").textContent = 'Cập nhật thông báo';
+                const submitBtn = document.getElementById("submit-btn");
+                submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-2"></i> <span>Lưu Thay Đổi</span>';
+                submitBtn.className = "flex-1 py-4 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-2xl shadow-xl shadow-amber-200 transition-all uppercase text-xs tracking-widest";
+                document.getElementById("cancel-edit-btn").classList.remove("hidden");
+                
+                switchTab('form');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+
+            renderList() {
+                const listEl = document.getElementById('announcements-list');
+                listEl.innerHTML = '';
+                document.getElementById('total-announcements').textContent = State.announcements.size;
+
+                if (State.announcements.size === 0) {
+                    listEl.innerHTML = '<div class="py-20 text-center text-slate-400 bg-white rounded-3xl border border-slate-200 italic">Trống</div>';
+                    return;
+                }
+
+                State.announcements.forEach((data, id) => {
+                    const excerpt = Utils.stripHtml(data.content).substring(0, 120) + '...';
+                    const div = document.createElement('div');
+                    div.className = "bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row gap-6 justify-between items-start border-l-8 border-l-brand/10 hover:border-l-brand";
+                    div.innerHTML = `
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-3 mb-3">
+                                ${Utils.getCategoryBadge(data.category)}
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"><i class="fa-regular fa-clock mr-1"></i> ${Utils.formatDate(data.createdAt)}</span>
+                            </div>
+                            <h3 class="text-lg font-black text-slate-900 mb-2 truncate text-sharp">${data.title}</h3>
+                            <p class="text-sm text-slate-500 line-clamp-2">${excerpt}</p>
+                        </div>
+                        <div class="flex sm:flex-col gap-2 shrink-0 w-full sm:w-28">
+                            <button data-id="${id}" class="action-edit px-4 py-2 text-[10px] font-black uppercase tracking-widest text-brand bg-brand/5 hover:bg-brand hover:text-white rounded-xl transition-all">Sửa</button>
+                            <button data-id="${id}" class="action-delete px-4 py-2 text-[10px] font-black uppercase tracking-widest text-red-600 bg-red-50 hover:bg-red-600 hover:text-white rounded-xl transition-all">Xóa</button>
+                        </div>
+                    `;
+                    listEl.appendChild(div);
+                });
+            },
+
+            renderCategories() {
+                const listEl = document.getElementById('categories-list');
+                listEl.innerHTML = '';
+                State.categories.forEach((data, id) => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center p-4 bg-white border border-slate-200 rounded-2xl hover:border-brand/30 transition-all group';
+                    div.innerHTML = `
+                        <span class="font-bold text-slate-700 text-sm">${data.name}</span>
+                        <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button data-id="${id}" class="action-edit-cat w-8 h-8 rounded-full flex items-center justify-center text-brand hover:text-brand-light hover:bg-brand/10 transition-all" title="Sửa danh mục">
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            </button>
+                            <button data-id="${id}" class="action-delete-cat w-8 h-8 rounded-full flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all" title="Xóa danh mục">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                    `;
+                    listEl.appendChild(div);
+                });
+            },
+
+            updateCategoryDropdown() {
+                const selectEl = document.getElementById('input-category');
+                selectEl.innerHTML = '<option value="" disabled selected>-- Chọn danh mục --</option>';
+                State.categories.forEach(data => {
+                    const opt = document.createElement('option');
+                    opt.value = data.name;
+                    opt.textContent = data.name;
+                    selectEl.appendChild(opt);
+                });
+            }
+        };
+
+        // ==========================================
+        // 4. DATA & AUTH CONTROLLER
+        // ==========================================
+        const DataCtrl = {
+            async startRealtimeData() {
+                // Announcements
+                onSnapshot(query(collection(db, "announcements"), orderBy("createdAt", "desc")), (snap) => {
+                    State.announcements.clear();
+                    snap.forEach(d => State.announcements.set(d.id, d.data()));
+                    ViewCtrl.renderList();
+                });
+
+                // Categories
+                onSnapshot(query(collection(db, "categories"), orderBy("createdAt", "asc")), (snap) => {
+                    State.categories.clear();
+                    snap.forEach(d => State.categories.set(d.id, d.data()));
+                    ViewCtrl.renderCategories();
+                    ViewCtrl.updateCategoryDropdown();
+                });
+
+                // Online count
+                try {
+                    const onlineCounterEl = document.getElementById('online-counter');
+                    if (onlineCounterEl) {
+                        const connectionsRef = ref(rtdb, 'connections');
+                        const connectedRef = ref(rtdb, '.info/connected');
+
+                        onValue(connectedRef, (snap) => {
+                            if (snap.val() === true) {
+                                const myConnectionRef = push(connectionsRef);
+                                onDisconnect(myConnectionRef).remove();
+                                set(myConnectionRef, true);
+                            }
+                        });
+
+                        onValue(connectionsRef, (snapshot) => {
+                            const val = snapshot.val();
+                            onlineCounterEl.textContent = val ? Object.keys(val).length : 0;
+                        });
+                    }
+                } catch (e) { console.error("Counter error", e); }
+            }
+        };
+
+        // ==========================================
+        // 5. BOOTSTRAP & EVENTS
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            ViewCtrl.initQuill();
+
+            // Auth Guard 
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    DataCtrl.startRealtimeData();
+                } else {
+                    window.location.replace("ad.login.html");
+                }
+            });
+
+            document.getElementById("logoutBtn").onclick = () => {
+                signOut(auth).then(() => window.location.replace("ad.login.html"));
+            };
+
+            // Form Submit Logic
+            document.getElementById('announcement-form').onsubmit = async (e) => {
+                e.preventDefault();
+                const title = document.getElementById('input-title').value.trim();
+                const category = document.getElementById('input-category').value;
+                const content = State.quillInstance.root.innerHTML;
+                if (!title || Utils.stripHtml(content) === "") return Utils.showToast("Vui lòng nhập đủ thông tin!", "error");
+
+                try {
+                    if (State.editingId) {
+                        await updateDoc(doc(db, "announcements", State.editingId), { title, content, category });
+                        Utils.showToast("Cập nhật thành công!");
+                    } else {
+                        await addDoc(collection(db, "announcements"), { title, content, category, createdAt: serverTimestamp() });
+                        Utils.showToast("Đã đăng thông báo mới!");
+                    }
+                    ViewCtrl.resetForm();
+                    switchTab('list');
+                } catch (err) { Utils.showToast("Lỗi hệ thống!", "error"); }
+            };
+
+            // Announcement List Actions
+            document.getElementById('announcements-list').onclick = async (e) => {
+                const id = e.target.dataset.id;
+                if (e.target.classList.contains('action-edit')) ViewCtrl.loadFormForEdit(id);
+                if (e.target.classList.contains('action-delete') && confirm("Xóa thông báo này?")) {
+                    await deleteDoc(doc(db, "announcements", id));
+                    Utils.showToast("Đã xóa!");
+                }
+            };
+
+            // Category Management
+            document.getElementById('category-form').onsubmit = async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('input-new-category').value.trim();
+                if (!name) return;
+
+                // Kiểm tra trùng
+                let isDup = false;
+                State.categories.forEach(cat => { if(cat.name.toLowerCase() === name.toLowerCase()) isDup = true; });
+                if(isDup) return Utils.showToast("Danh mục này đã tồn tại!", "error");
+
+                await addDoc(collection(db, "categories"), { name, createdAt: serverTimestamp() });
+                document.getElementById('input-new-category').value = '';
+                Utils.showToast("Đã thêm danh mục!");
+            };
+
+            document.getElementById('categories-list').onclick = async (e) => {
+                const id = e.target.closest('button')?.dataset.id;
+                if (!id) return;
+
+                const editBtn = e.target.closest('.action-edit-cat');
+                const delBtn = e.target.closest('.action-delete-cat');
+
+                if (editBtn) {
+                    const currentData = State.categories.get(id);
+                    const newName = prompt("Nhập tên mới cho danh mục:", currentData.name);
+                    if (newName && newName.trim() !== "" && newName.trim() !== currentData.name) {
+                        try {
+                            await updateDoc(doc(db, "categories", id), { name: newName.trim() });
+                            Utils.showToast("Đã cập nhật danh mục!");
+                        } catch (err) { Utils.showToast("Lỗi khi cập nhật!", "error"); }
+                    }
+                }
+
+                if (delBtn && confirm("Xóa danh mục này?")) {
+                    await deleteDoc(doc(db, "categories", id));
+                    Utils.showToast("Đã xóa danh mục!");
+                }
+            };
+
+            document.getElementById("cancel-edit-btn").onclick = () => {
+                ViewCtrl.resetForm();
+                switchTab('list');
+            };
+
+            // ĐÃ SỬA LỖI ĐƯỜNG DẪN MENU
+            fetch('/menu.html').then(r => r.ok ? r.text() : "").then(h => { if(h) document.getElementById('navbar-placeholder').innerHTML = h; });
+        });
+    </script>
+</body>
+</html>

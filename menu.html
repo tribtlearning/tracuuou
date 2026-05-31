@@ -1,0 +1,190 @@
+<!--
+  Thanh Điều Hướng Hệ Thống - Phông cách Tailwind CSS
+  Màu chủ đạo: #005625
+  Phiên bản: Vanilla JS (Đã thay thế Icon Menu Mobile thành SVG thuần 100% không bị tàng hình)
+-->
+<nav class="bg-[#005625] text-white shadow-lg w-full relative z-50">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-[70px]">
+            <!-- Logo & Brand -->
+            <div class="flex items-center min-w-0 flex-1 pr-4">
+                <a href="/" class="flex items-center gap-2 group min-w-0">
+                    <span class="text-2xl flex-shrink-0 group-hover:scale-110 transition-transform duration-300">📘</span>
+                    <span class="font-bold text-base sm:text-xl tracking-tight group-hover:text-emerald-200 transition-colors text-sharp truncate">
+                        Hệ thống tra cứu TVU <span class="hidden sm:inline">& Tiện ích</span>
+                    </span>
+                </a>
+            </div>
+
+            <!-- Desktop Menu -->
+            <div class="hidden lg:flex items-center space-x-1 flex-shrink-0">
+                <a href="/" class="px-3 py-2 rounded-md text-base font-medium hover:bg-[#00401b] transition-colors">Trang chủ</a>
+                <a href="/export" class="px-3 py-2 rounded-md text-base font-medium hover:bg-[#00401b] transition-colors">Đề Cương</a>
+                <a href="/thongbao" class="px-3 py-2 rounded-md text-base font-medium hover:bg-[#00401b] transition-colors">Thông Báo</a>
+                
+                <!-- Utilities Dropdown (Dùng CSS Group Hover) -->
+                <div class="relative group cursor-pointer">
+                    <div class="px-3 py-2 rounded-md text-base font-medium hover:bg-[#00401b] flex items-center gap-1 transition-colors">
+                        Tiện ích
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200 group-hover:rotate-180"></i>
+                    </div>
+
+                    <!-- Dropdown Content -->
+                    <div class="absolute right-0 top-full pt-2 w-60 invisible opacity-0 translate-y-2 group-hover:translate-y-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 z-50">
+                        <div class="rounded-xl shadow-2xl bg-white text-slate-800 ring-1 ring-black ring-opacity-5 py-2 overflow-visible">
+                            
+                            <a href="/ocr" class="block px-4 py-2.5 text-base hover:bg-emerald-50 hover:text-[#005625] font-semibold transition-colors border-l-4 border-transparent hover:border-[#005625]">
+                                <i class="fa-solid fa-brain w-6 text-center mr-1 opacity-70"></i> Tra cứu OCR
+                            </a>
+                            
+                            <a href="/english" class="block px-4 py-2.5 text-base hover:bg-emerald-50 hover:text-[#005625] font-semibold transition-colors border-l-4 border-transparent hover:border-[#005625]">
+                                <i class="fa-solid fa-language w-6 text-center mr-1 opacity-70"></i> Trợ lý Tiếng Anh AI
+                            </a>
+                            <!--
+                            <a href="/ai-music" class="block px-4 py-2.5 text-base hover:bg-emerald-50 hover:text-[#005625] font-semibold transition-colors border-l-4 border-transparent hover:border-[#005625]">
+                                <i class="fa-solid fa-music w-6 text-center mr-1 opacity-70"></i> Sáng tác nhạc AI
+                            </a>
+                            -->
+                            <!-- Submenu: Trợ lý học tập HG -->
+                            <div class="relative group/sub">
+                                <div class="w-full text-left px-4 py-2.5 text-base hover:bg-emerald-50 hover:text-[#005625] font-semibold flex justify-between items-center transition-colors border-l-4 border-transparent hover:border-[#005625]">
+                                    <span><i class="fa-solid fa-robot w-6 text-center mr-1 opacity-70"></i> Trợ lý học tập HG</span>
+                                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                                </div>
+                                
+                                <!-- Submenu Content -->
+                                <div class="absolute right-full top-0 pr-1 w-64 invisible opacity-0 translate-x-2 group-hover/sub:translate-x-0 group-hover/sub:visible group-hover/sub:opacity-100 transition-all duration-200 z-50">
+                                    <div class="bg-white rounded-xl shadow-2xl py-2 ring-1 ring-black ring-opacity-5">
+                                        <a href="https://microsoftedge.microsoft.com/addons/detail/tr%E1%BB%A3-l%C3%BD-h%E1%BB%8Dc-t%E1%BA%ADp-hg/ighppgieadhjnhinnodngbnbidgflajc" 
+                                           target="_blank" class="block px-4 py-2 text-sm font-bold hover:bg-emerald-50 hover:text-[#005625] transition-colors">
+                                            <i class="fa-brands fa-edge w-6 text-center mr-1 text-base"></i> Trợ lý HG (Edge)
+                                        </a>
+                                        <a href="https://addons.mozilla.org/vi/firefox/addon/erro" 
+                                           target="_blank" class="block px-4 py-2 text-sm font-bold hover:bg-emerald-50 hover:text-[#005625] transition-colors">
+                                            <i class="fa-brands fa-firefox-browser w-6 text-center mr-1 text-base"></i> Trợ lý HG (Firefox)
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <a href="/wifi-qrcode" class="block px-4 py-2.5 text-base hover:bg-emerald-50 hover:text-[#005625] font-semibold transition-colors border-l-4 border-transparent hover:border-[#005625]">
+                                <i class="fa-solid fa-qrcode w-6 text-center mr-1 opacity-70"></i> Tạo QR Wifi
+                            </a>
+                            
+                            <div class="my-1 border-t border-slate-100"></div>
+                            
+                            <a href="/privacy_policy" class="block px-4 py-2.5 text-base hover:bg-emerald-50 hover:text-[#005625] font-semibold transition-colors border-l-4 border-transparent hover:border-[#005625]">
+                                <i class="fa-solid fa-shield-check w-6 text-center mr-1 opacity-70"></i> Chính sách bảo mật
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="https://tet.hugo.io.vn" target="_blank" class="ml-2 px-4 py-1.5 bg-[#00401b] hover:bg-emerald-600 rounded-full text-xs font-bold transition-all shadow-inner border border-emerald-800 tracking-wide uppercase">
+                    🧧 Đếm ngày đến Tết
+                </a>
+            </div>
+
+            <!-- Mobile menu button (Dùng Inline JS và SVG thuần đảm bảo ăn 100%) -->
+            <div class="lg:hidden flex items-center flex-shrink-0">
+                <button onclick="
+                            document.getElementById('mobile-menu').classList.toggle('hidden');
+                            document.getElementById('icon-open').classList.toggle('hidden');
+                            document.getElementById('icon-close').classList.toggle('hidden');
+                        " 
+                        class="inline-flex items-center justify-center p-2 rounded-md hover:bg-[#00401b] focus:outline-none transition-colors text-white">
+                    
+                    <!-- SVG Nút 3 gạch (Không phụ thuộc thư viện ngoài) -->
+                    <svg id="icon-open" class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+
+                    <!-- SVG Nút X đóng menu -->
+                    <svg id="icon-close" class="w-7 h-7 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Content -->
+    <div id="mobile-menu" class="hidden lg:hidden bg-[#00401b] border-t border-white/10 absolute top-full w-full left-0 shadow-2xl z-50">
+        <div class="px-2 pt-2 pb-4 space-y-1">
+            <a href="/" class="block px-3 py-2 rounded-md text-lg font-medium hover:bg-[#005625]">Trang chủ</a>
+            <a href="/export" class="block px-3 py-2 rounded-md text-lg font-medium hover:bg-[#005625]">Đề Cương</a>
+            <a href="/thongbao" class="block px-3 py-2 rounded-md text-lg font-medium hover:bg-[#005625]">Thông Báo</a>
+            
+            <!-- Mobile Utilities (Accordion Inline JS) -->
+            <div>
+                <button onclick="
+                            document.getElementById('mobile-util-menu').classList.toggle('hidden');
+                            document.getElementById('mobile-util-icon').classList.toggle('rotate-180');
+                        " 
+                        class="w-full text-left px-3 py-2 rounded-md text-lg font-medium flex justify-between items-center hover:bg-[#005625]">
+                    Tiện ích
+                    <i id="mobile-util-icon" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+                </button>
+                <div id="mobile-util-menu" class="hidden pl-4 space-y-1 bg-black/10 rounded-lg mt-1 p-2">
+                    
+                    <a href="/ocr" class="block px-3 py-2 text-base font-medium hover:bg-[#005625] rounded-md transition-colors">
+                        <i class="fa-solid fa-brain w-6 text-center mr-1 opacity-70"></i> Tra cứu OCR
+                    </a>
+                    
+                    <a href="/english" class="block px-3 py-2 text-base font-medium hover:bg-[#005625] rounded-md transition-colors">
+                        <i class="fa-solid fa-language w-6 text-center mr-1 opacity-70"></i> Trợ lý Tiếng Anh AI
+                    </a>
+                   <!--
+                    <a href="/ai-music" class="block px-3 py-2 text-base font-medium hover:bg-[#005625] rounded-md transition-colors">
+                        <i class="fa-solid fa-music w-6 text-center mr-1 opacity-70"></i> Sáng tác nhạc AI
+                    </a>
+                    -->
+                    <!-- Mobile HG Assistant Submenu -->
+                    <div>
+                        <button onclick="
+                                    document.getElementById('mobile-hg-sub').classList.toggle('hidden');
+                                    document.getElementById('mobile-hg-icon').classList.toggle('rotate-180');
+                                " 
+                                class="w-full text-left px-3 py-2 text-base font-medium flex justify-between items-center hover:bg-[#005625] rounded-md transition-colors">
+                            <span><i class="fa-solid fa-robot w-6 text-center mr-1 opacity-70"></i> Trợ lý học tập HG</span>
+                            <i id="mobile-hg-icon" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"></i>
+                        </button>
+                        <div id="mobile-hg-sub" class="hidden pl-8 py-1 space-y-1 text-sm opacity-90">
+                            <a href="https://microsoftedge.microsoft.com/addons/detail/tr%E1%BB%A3-l%C3%BD-h%E1%BB%8Dc-t%E1%BA%ADp-hg/ighppgieadhjnhinnodngbnbidgflajc" target="_blank" class="block py-2 hover:text-emerald-300 transition-colors">
+                                <i class="fa-brands fa-edge w-6 text-center"></i> Trợ lý HG (Edge)
+                            </a>
+                            <a href="https://addons.mozilla.org/vi/firefox/addon/erro" target="_blank" class="block py-2 hover:text-emerald-300 transition-colors">
+                                <i class="fa-brands fa-firefox-browser w-6 text-center"></i> Trợ lý HG (Firefox)
+                            </a>
+                        </div>
+                    </div>
+
+                    <a href="/wifi-qrcode" class="block px-3 py-2 text-base font-medium hover:bg-[#005625] rounded-md transition-colors">
+                        <i class="fa-solid fa-qrcode w-6 text-center mr-1 opacity-70"></i> Tạo QR Wifi
+                    </a>
+                    
+                    <div class="my-2 border-t border-white/10 mx-3"></div>
+                    
+                    <a href="/privacy_policy" class="block px-3 py-2 text-base font-medium hover:bg-[#005625] rounded-md transition-colors">
+                        <i class="fa-solid fa-shield-check w-6 text-center mr-1 opacity-70"></i> Chính sách bảo mật
+                    </a>
+                </div>
+            </div>
+            
+            <a href="https://tet.hugo.io.vn" target="_blank" class="block px-3 py-2 rounded-md text-lg font-bold text-amber-300 hover:bg-[#005625]">
+                🧧 Đếm ngày đến Tết
+            </a>
+        </div>
+    </div>
+</nav>
+
+<style>
+    #navbar-placeholder {
+        min-height: 70px;
+    }
+    .text-sharp {
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+    }
+</style>
